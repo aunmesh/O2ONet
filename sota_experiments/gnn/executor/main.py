@@ -5,7 +5,7 @@ from utils.utils import get_parser, config_loader
 from train import train
 from val import val
 from test import test
-from dataloader.dataset import coin_combined_data
+from dataloader.dataset import dataset
 from tqdm import tqdm as tqdm
 import numpy as np
 
@@ -16,7 +16,6 @@ from metrics.metrics import metric_tracker
 from utils.main_utils import *
 
 def main(args):
-
     
     ### Load Config
     config = config_loader(args.config)
@@ -27,14 +26,14 @@ def main(args):
     ### Load Optimizer
     optimizer = get_optimizer(config, model)
     
-    ### Load Logger 
-    logger = wandb_logger(config)
+    ### Load Logger  ( UNCOMMENT ) 
+    # logger = wandb_logger(config)
 
     start_epoch = 0
 
     ### Check if resuming training (Commented)
 
-    # config['run_id'] = 'debug'
+    config['run_id'] = 'debug'
     
     # if args.resume:
     #     config['run_id'] = args.run_id
@@ -63,7 +62,8 @@ def main(args):
         best_mAP = -np.inf
         
         ### Training Loop
-        for e in tqdm(range(start_epoch, end_epoch)):
+        # for e in tqdm(range(start_epoch, end_epoch)):
+        for e in tqdm(range(start_epoch, 1)):
 
             ### Train for an epoch and get the result dictionary
             train_result = train(model, train_loader, optimizer, config, train_metric_tracker)
@@ -73,15 +73,15 @@ def main(args):
             
             ### Save the model and log results
             is_best = False
-            if best_mAP < val_result['val_frame_mAP']:
-                best_mAP = val_result['val_frame_mAP']
+            if best_mAP < val_result['val_mAP_all']:
+                best_mAP = val_result['val_mAP_all']
                 is_best = True
 
             ### Saving the best model if it is there
             save_state(model, optimizer, e, config, is_best)  # ADD FUNCTIONALITY FOR SAVING BEST MODEL
             
             ### logging the training and validation result for viewing
-            logger.log_dict({**train_result, **val_result})
+            # logger.log_dict({**train_result, **val_result})
 
         ### Testing the model
         
@@ -93,7 +93,7 @@ def main(args):
         test_result = test(model, test_loader, config, test_metric_tracker )
         
         ### Logging test result
-        logger.log_dict(test_result)
+        # logger.log_dict(test_result)
 
 if __name__ == "__main__":
     

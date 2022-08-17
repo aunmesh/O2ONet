@@ -1,7 +1,7 @@
 # Implements the validation
 # Dependencies: loss, metrics, maybe some util files
 
-from utils.utils import process_data_for_fpass, process_data_for_metrics, loss_aggregator
+from utils.utils import process_data_for_fpass, process_data_for_metrics
 
 def test( model, test_loader, config, metric_tracker):
     '''
@@ -21,8 +21,7 @@ def test( model, test_loader, config, metric_tracker):
         d_item = process_data_for_fpass(d_item, config)
         output_dict = model(d_item)
         
-        test_step_result = metric_tracker.calc_metrics(output_dict[-1], d_item['label_vector']
-                                                   , d_item['num_clips'])
+        test_step_result = metric_tracker.calc_metrics(output_dict, d_item)
         
     test_result = metric_tracker.aggregate_metrics()
     metric_tracker.reset_metrics()

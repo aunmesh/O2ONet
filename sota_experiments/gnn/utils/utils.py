@@ -1,3 +1,16 @@
+from torch_geometric.nn import TransformerConv, GCNConv, GATConv
+
+def get_gnn(config, in_dim, out_dim):
+    
+    if config['GNN'] == 'TransformerConv':
+        return TransformerConv(in_dim, out_dim)
+    
+    if config['GNN'] == 'GCN':
+        return GCNConv(in_dim, out_dim)
+    
+    if config['GNN'] == 'GATConv':
+        return GATConv(in_dim, out_dim)
+
 from os import device_encoding
 import yaml
 import pickle
@@ -107,7 +120,7 @@ def get_parser():
                         )
 
     parser.add_argument('--config', 
-                        default="/workspace/work/CVPR22/action_understanding/config/training.yaml",
+                        default="/workspace/work/O2ONet/sota_experiments/gnn/configs/training.yaml",
                         help='config file location')
 
     parser.add_argument('--resume',
@@ -143,89 +156,71 @@ def pool_edge_features(edge_feature_mat, edge_index):
 
 
 
-def process_data_for_fpass(d_item, config):
-    # function for further processing of the data item d_item
-    # # obtained from the data_loader 
-
-    '''
-    #torch.Size([500, 11, 15, 5]) #torch.Size([500, 15, 2048])
-    '''
-    # for k in d_item.keys():
-    #     try:
-    #         print(k, d_item[k].shape)
-    #     except:
-    #         print(k)
-
-    obj_features_temporal = []
-    for f in config['ooi_node_temporal_features_list']:
-        
-        temp_shape = d_item[f].shape
-        temp_tensor = d_item[f].transpose(2,3).reshape(temp_shape[0],temp_shape[1], temp_shape[3], -1)
-        obj_features_temporal.append(temp_tensor)
-
-
-    obj_features_nontemporal = [ d_item[f] for f in config['ooi_node_nontemporal_features_list'] ]    
-
-    obj_features = torch.cat(obj_features_temporal + obj_features_nontemporal, 3)
-
-    d_item['clip_node_features'] = obj_features.to(config['device'])
-    d_item['clip_edge_index'] = d_item['clip_edge_index'].to(config['device'])
-
-    d_item['feature_mat'] = d_item['video_i3d_feature'].to(config['device'])
-    d_item['feature_mat'] = d_item['feature_mat'].transpose(1,2)
-
-    d_item['label_vector'] = d_item['clip_label_vector'].long().to(config['device'])
+def process_data_for_fpass(data_item, config):
+   
+   # obj_features, obj_pairs, slicing dictionary
+   
+   
+    # Pre-process the feature tensors
     
-    #d_item['num_frames'] = d_item['num_clips'].to(config['device'])
-    b_size = d_item['feature_mat'].shape[0]
+    central_frame_index = int(config['gif_size']/2)
+
+    # i3d feature - perform average pool
+    # Incoming shape - [batch_size, num_frames, num_obj, f_size]
+    data_item['i3d_feature'] = torch.mean(data_item['i3d_feature_map'], 1)
+
+    # 2d cnn feature - nothing needs to be done
+
+    # geometric_feature - select the central frame
+    # shape: [batch_size, num_obj, num_frames, f_size]
+    data_item['central_frame_geometric_feature'] = data_item['geometric_feature'][:, :, central_frame_index, :]
+    data_item['central_frame_motion_feature'] = data_item['motion_feature'][:, :, central_frame_index, :]
+
+    # Padded features
+    obj_features = [ data_item[f] for f in config['features_list'] ]
+    obj_features = torch.cat(obj_features, 2)
+
+
+    # Padded Edge Index
+
+    collated_obj_features, node_slicing = collate_node_features(obj_features, 
+                                                    data_item['num_obj'], config['device']
+                                                        )
+
+    collated_edge_index, edge_slicing = collate_edge_indices(data_item['edge_index'], 
+                            data_item['num_edges'], data_item['num_obj'], config['device']
+                                                        )
+
+    data_item['edge_index'] = data_item['edge_index'].to(config['device'])
+    data_item['num_edges'] = data_item['num_edges'].to(config['device'])
+    data_item['num_obj'] = data_item['num_obj'].to(config['device'])
+
+    data_item['collated_obj_features'] = collated_obj_features.to(config['device'])
+    data_item['collated_obj_features'] = data_item['collated_obj_features'].type(torch.double)
     
-    d_item['frames_mask'] = torch.zeros(b_size, 500).to(config['device'])
+    data_item['collated_edge_index'] = collated_edge_index.to(config['device'])
 
-    for b in range(b_size):
-        temp_num_frames = d_item['num_clips'][b]
-        d_item['frames_mask'][b, :temp_num_frames] = 1
+    # Create the slicing dictionary in train.py from incoming 
+    # features and incoming edge indices.
+
+    data_item['slicing'] = {}
+
+    data_item['slicing']['node'] = node_slicing
+    data_item['slicing']['edge'] = edge_slicing
+
+    data_item['object_pairs'] = data_item['object_pairs'].type(torch.long)
     
-    d_item['num_clips'] = d_item['num_clips'].int().to(config['device'])
-
-    d_item['frames_mask'][b, :temp_num_frames] = 1
-
+    data_item['lr'] = data_item['lr'].to(config['device'])
+    data_item['mr'] = data_item['mr'].to(config['device'])
+    data_item['cr'] = data_item['cr'].to(config['device'])
     
-    if ('relative_feature' in config.keys()):
-        temp_mat = d_item['clip_re_feature']
-        
-        d_item['relative_feature_pooled'] = torch.zeros(b_size, 77, 500).to(config['device'])
-
-        for b in range(b_size):
-            temp_num_clips = d_item['num_clips'][b]
-            temp_batch_feature_mat = d_item['clip_re_feature'][b,:temp_num_clips] #num_clips,11,15,15,7
-            for i in range(temp_num_clips):
-                temp_mat = temp_batch_feature_mat[i]
-                temp_mat = temp_mat.swapaxes(0,1)
-                temp_mat = temp_mat.swapaxes(1,2)
-                temp_mat = temp_mat.contiguous()
-                temp_mat = temp_mat.view(15,15,-1)
-                edge_index = d_item['clip_edge_index'][b,i]
-                result = pool_edge_features(temp_mat, edge_index)
-                d_item['relative_feature_pooled'][b,:,i] = result
-    
-    if 'nenn' in config['model_name']:
-        d_item['clip_nenn_edge_index'] = d_item['nenn_edge_index'].to(config['device'])
-        d_item['clip_nenn_num_edges'] = d_item['nenn_num_edges'].to(config['device'])
-        d_item['clip_re_feature'] = d_item['clip_re_feature'].to(config['device'])
-
-    return d_item
+    return data_item
 
 
 def process_data_for_metrics(d_item):
     # function for further processing of the data item d_item
     # # obtained from the data_loader 
     raise NotImplementedError
-
-
-def loss_aggregator(loss_dict, dset_size):
-    raise NotImplementedError
-
-
 
 
 class loss_epoch_aggregator:
@@ -268,3 +263,96 @@ class loss_epoch_aggregator:
     def reset(self):
         self.loss_aggregated = None
         self.stage = ''
+
+
+
+
+import torch
+from zmq import device
+
+def collate_node_features(obj_features, num_objects, device):
+    
+    total_objects = torch.sum(num_objects)
+    dim_features = obj_features.shape[-1] #[b_size, num_obj, feature_dimension]
+
+    res = torch.zeros((total_objects, dim_features), dtype = obj_features.dtype, device=device)
+    
+    b_size = int(obj_features.shape[0])
+    curr_index = 0
+    node_slices = torch.zeros((total_objects), device=device)
+
+    for b in range(b_size):
+        
+        curr_obj = int(num_objects[b])
+        res[curr_index: curr_index + curr_obj,:] = obj_features[b,:curr_obj,:]
+        
+        node_slices[curr_index:curr_index + curr_obj] = b
+
+        curr_index+=curr_obj
+    
+    return res, node_slices
+
+def collate_edge_indices(edge_index, num_edges, num_objects, device):
+
+    total_edges = torch.sum(num_edges)
+    res = torch.zeros((2, total_edges), dtype = edge_index.dtype, device=device)
+
+    b_size = int(edge_index.shape[0])
+
+    curr_index = 0
+    edge_slices = torch.zeros((total_edges), device=device)
+    lower = 0
+    upper = 0
+    for b in range(b_size):
+
+        curr_edge = int(num_edges[b])
+
+        temp_num_objects = torch.sum(num_objects[lower:upper])
+
+        res[ : , curr_index: curr_index+curr_edge] = temp_num_objects
+        res[ : , curr_index: curr_index+curr_edge] += edge_index[b, :, : curr_edge]
+
+        edge_slices[curr_index: curr_index+curr_edge] = b
+        upper+=1        
+        curr_index+=curr_edge
+
+    return res, edge_slices
+
+
+
+def decollate_node_embeddings(all_node_embeddings, node_slicing, device, pad_len=8):
+
+    dim_embedding = all_node_embeddings.shape[-1]
+    b_size = int(node_slicing[-1]+1)
+    
+    result = torch.zeros((b_size, pad_len, dim_embedding), dtype=all_node_embeddings.dtype, device=device)
+    
+    for i in range(b_size):
+        curr_obj = i
+        
+        indices = torch.where(node_slicing == curr_obj)
+        num_obj = indices[0].shape[0]
+
+        temp_embeddings = all_node_embeddings[indices]
+        result[i][:num_obj] = temp_embeddings
+
+    return result
+
+
+import torch
+
+def concatenate(t1, t2):
+    return torch.cat((t1, t2))
+
+def mean(t1, t2):
+    return t1.add(t2)/2.0
+
+def aggregate(t1, t2, name):
+    
+    assert name == "mean" or name == "concat", "aggregator name can only be mean or concat"
+
+    if name=='mean':
+        return mean(t1, t2)
+    
+    if name=='concat':
+        return concatenate(t1, t2)

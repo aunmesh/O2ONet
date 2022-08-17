@@ -1,7 +1,7 @@
+from torch import double, tensor
 import torch.nn as nn
 import torch.nn.functional as F
-from module_utils import get_gnn
-import torch
+from utils.utils import get_gnn
 
 class GNN(nn.Module):
 
@@ -14,19 +14,21 @@ class GNN(nn.Module):
 
         super(GNN, self).__init__()
 
-        self.gc_layers = nn.ModuleList()  # for storing all the Graphical Convolution Layers
+        self.gc_layers = nn.ModuleList()  # for storing all the Graph Convolution Layers
         self.dimensions = dimensions
         self.dropout = dropout
+        self.config = config
 
         for i in range(len(self.dimensions) - 1):
             
             curr_d = dimensions[i]
             next_d = dimensions[i+1]
 
-            temp_gc_layer = get_gnn(curr_d, next_d)
+            temp_gc_layer = get_gnn(self.config, curr_d, next_d)
             self.gc_layers.append(temp_gc_layer)
 
     def forward(self, x, edge_index):
+
         '''
         forward function where x is the input feature vector
         and edge_index is the Adjacency matrix
@@ -37,4 +39,5 @@ class GNN(nn.Module):
         for i in range(len(self.gc_layers)):
             x = F.relu(self.gc_layers[i](x, edge_index))
             x = F.dropout(x, self.dropout)
+
         return x

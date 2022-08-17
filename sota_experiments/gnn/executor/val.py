@@ -32,7 +32,7 @@ def val( model, val_loader, config=None, metric_tracker=None):
         output_dict = model(d_item)
         
         # Getting Loss values
-        loss_dict = loss.segmentation_loss(output_dict[-1], d_item['label_vector'], d_item['num_clips'])
+        loss_dict = loss.masked_loss(output_dict, d_item)
         
         ### Adding to loss aggregator
         loss_aggregator.add(loss_dict)
@@ -40,8 +40,7 @@ def val( model, val_loader, config=None, metric_tracker=None):
         #d_item_metrics = process_data_for_metrics(d_item)
         
         ### Calculating metrics for this particular pass
-        step_results = metric_tracker.calc_metrics(output_dict[-1], d_item['label_vector']
-                                                    , d_item['num_clips'])
+        step_results = metric_tracker.calc_metrics(output_dict, d_item)
         
     ### Get the average metric for the entire run
     metric_dict = metric_tracker.aggregate_metrics()

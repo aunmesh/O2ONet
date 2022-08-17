@@ -1,25 +1,24 @@
-from model.nn_nets.ooi_i3d_action_net_nenn import action_net as ooi_i3d_nenn_net
+from model.nn_nets.ooi_net import ooi_net as ooi_net
 import torch
 import os
 
 
 def get_model(config):
 
-    if config['model_name'] == 'i3d_ooi':
+    if config['model_name'] == 'ooi_net':
 
-        model = ooi_i3d_net(config).to(config['device'])
+        model = ooi_net(config).to(config['device'])
         return model
 
 
-from dataloader.dataset import *
+from dataloader.dataset import dataset
 
 
 def get_dataset(config, split='train'):
 
-    if config['dataset'] = 'ooi':
+    if config['dataset_description'] == 'ooi_dataset':
 
-        dataset = dataset(config, split)
-        return dataset
+        return dataset(config, split)
 
 
 

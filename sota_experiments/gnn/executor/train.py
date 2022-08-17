@@ -36,7 +36,7 @@ def train(model, train_loader, optimizer, config, metric_tracker):
         output_dict = model(d_item)
 
         ### Loss Calculation
-        loss_dict = loss.segmentation_loss(output_dict[-1], d_item['label_vector'], d_item['num_clips'])
+        loss_dict = loss.masked_loss(output_dict, d_item)
         
         ### Backward Pass
         loss_dict['loss_total'].backward()
@@ -48,11 +48,11 @@ def train(model, train_loader, optimizer, config, metric_tracker):
         # d_item_metrics = process_data_for_metrics(d_item)
         
         ### Calculating metrics for this iteration
-        step_results = metric_tracker.calc_metrics(output_dict[-1], d_item['label_vector']
-                                                   , d_item['num_clips'])
+        step_results = metric_tracker.calc_metrics(output_dict, d_item)
         
         ### Optimizing the Model
         optimizer.step()
+        break
     
     ### Aggregating metrics across all iterations
     metric_dict = metric_tracker.aggregate_metrics()

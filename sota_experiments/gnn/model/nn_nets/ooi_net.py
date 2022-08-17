@@ -1,10 +1,9 @@
-from utils.collate_graph import decollate_node_embeddings
-from utils.config_loader import config_loader
+from utils.utils import decollate_node_embeddings
 
 from model.nn_modules.relation_classifier import relation_classifier
-from model.nn_modules.gnn import gnn
+from model.nn_modules.gnn import GNN 
 
-from utils.aggregators import aggregate
+from utils.utils import aggregate
 
 import torch.nn as nn
 import torch.nn.functional as F
@@ -28,21 +27,22 @@ class ooi_net(nn.Module):
                               dimensions along with other things.
         '''
         super(ooi_net, self).__init__()
-        
+        self.config = config
+
         # creating the gcn
         self.device = config['device']
         
         # Creating the Graph Neural Network
         gcn_dim = config['gcn_dimensions']
         gcn_dropout = config['gcn_dropout']
-        self.gnn = gnn(self.config, gcn_dim, gcn_dropout)
+        self.GNN = GNN(self.config, gcn_dim, gcn_dropout).double()
         
         # creating the relation classifiers
 
         # creating the scr classifier
-        scr_dim = config['scr_dimensions']
-        scr_dropout = config['scr_dropout']
-        self.scr_cls = relation_classifier(scr_dim, scr_dropout, self.device)
+        cr_dim = config['cr_dimensions']
+        scr_dropout = config['cr_dropout']
+        self.cr_cls = relation_classifier(cr_dim, scr_dropout, self.device)
 
         # creating the mr classifier
         lr_dim = config['lr_dimensions']
@@ -96,7 +96,8 @@ class ooi_net(nn.Module):
 
         return num_pairs, classifier_input
 
-    def forward(self, obj_features, edge_index, obj_pairs, slicing):
+    #def forward(self, obj_features, edge_index, obj_pairs, slicing):
+    def forward(self, data_item):
         '''
         Input:
             obj_features: These are actually node features
@@ -107,25 +108,26 @@ class ooi_net(nn.Module):
             results: a dictionary with keys for mr,lr and scr. 
                     The keys point to results of mr, lr and scr classification.
         '''
-
+        collated_obj_features = data_item['collated_obj_features']
+        collated_edge_index = data_item['collated_edge_index']
+        
         # convolving the obj_features
-        all_obj_embeddings = self.gnn(obj_features, edge_index)
+        all_obj_embeddings = self.GNN(collated_obj_features, collated_edge_index)
         
         
         obj_embeddings = decollate_node_embeddings(
-            all_obj_embeddings, slicing['node'], self.device)
+            all_obj_embeddings, data_item['slicing']['node'], self.device)
 
         num_pairs, classifier_input = self.make_classifier_inputs(
-            obj_embeddings, obj_pairs)
+            obj_embeddings, data_item['object_pairs'])
 
         num_batches = obj_embeddings.shape[0]
-
 
         predictions = {}
 
         # Make the batch for features
         predictions['lr'] = self.lr_cls(num_pairs, classifier_input, num_batches)
-        predictions['scr'] = self.scr_cls(num_pairs, classifier_input, num_batches)
+        predictions['cr'] = self.cr_cls(num_pairs, classifier_input, num_batches)
         predictions['mr'] = self.mr_cls(num_pairs, classifier_input, num_batches)
 
         return predictions
