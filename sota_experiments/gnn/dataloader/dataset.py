@@ -22,7 +22,12 @@ class dataset(Dataset):
                                             )
 
         self.dataset = read_data(self.dataset_location)
-
+        
+        if self.config['overfit'] and split=='train':
+            print("here")
+            self.dataset = self.dataset[:self.config['train_batch_size']]
+            # self.dataset = self.dataset[:1]
+    
     def __len__(self):
         return len(self.dataset)
 
@@ -72,5 +77,5 @@ class dataset(Dataset):
         return data_item
 
     def __getitem__(self, idx):
-        
-        return self.modify_dataitem(idx)
+
+        return self.modify_dataitem(idx), idx

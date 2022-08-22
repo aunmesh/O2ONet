@@ -5,7 +5,7 @@ import loss
 from utils.utils import process_data_for_fpass, process_data_for_metrics, loss_epoch_aggregator
 
 
-def val( model, val_loader, config=None, metric_tracker=None):
+def val( model, val_loader, config, criterions, metric_tracker):
 
     '''
     args:
@@ -20,10 +20,15 @@ def val( model, val_loader, config=None, metric_tracker=None):
     # Average the metrics
     # return a result_dict
 
+    ### set model to eval mode
+    model = model.eval()
+   
     ### Creating a loss aggregator
     loss_aggregator = loss_epoch_aggregator(stage='val')
 
-    for _, d_item in enumerate(val_loader):
+    for _, data_item in enumerate(val_loader):
+        
+        d_item, idx = data_item
         
         ### modifying data item if it needs modification before forward pass
         d_item = process_data_for_fpass(d_item, config)
@@ -32,7 +37,7 @@ def val( model, val_loader, config=None, metric_tracker=None):
         output_dict = model(d_item)
         
         # Getting Loss values
-        loss_dict = loss.masked_loss(output_dict, d_item)
+        loss_dict = loss.masked_loss(output_dict, d_item, criterions)
         
         ### Adding to loss aggregator
         loss_aggregator.add(loss_dict)
@@ -53,4 +58,5 @@ def val( model, val_loader, config=None, metric_tracker=None):
     val_result = {**loss_epoch, **metric_dict}
     metric_tracker.reset_metrics()
 
+    model = model.train()
     return val_result

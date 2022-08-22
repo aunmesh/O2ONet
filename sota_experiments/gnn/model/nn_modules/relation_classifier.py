@@ -44,7 +44,7 @@ class relation_classifier(nn.Module):
                 for j in range(len(self.layers)-1):
                     x = F.relu(self.layers[j](x))
                     x = F.dropout(x, self.dropout)
-                
+
                 result_tensor[b, i] = self.layers[-1](x)
 
         return result_tensor

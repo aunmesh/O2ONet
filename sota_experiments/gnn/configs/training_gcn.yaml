@@ -1,0 +1,59 @@
+train_batch_size: 32
+val_batch_size: 206
+test_batch_size: 203
+
+num_epochs: 200
+lr: .01
+features_list: ['central_frame_geometric_feature', 'cnn_bbox_feature', 'i3d_feature', 'central_frame_motion_feature']
+
+optimizer: 'Adam'
+
+# After how many epochs to save the model
+save_epoch: 1
+
+model_name: 'ooi_net'
+GNN: 'GCN'
+overfit: True
+
+model_saving_path: '/workspace/work/results_ICRA_gcn/'
+
+# Neural Network dimensions
+gcn_dimensions : [1148, 512, 256, 128, 64]
+gcn_dropout : 0.0
+
+cr_dimensions : [64, 64, 3]
+cr_dropout : 0.0
+
+lr_dimensions : [64, 64, 5]
+lr_dropout : 0.0
+
+mr_dimensions : [64, 64, 14]
+mr_dropout : 0.0
+aggregator : 'mean'
+
+# field to distinguish from different datasets (depending on gif length)
+dataset_description: 'ooi_dataset'
+
+# root folder of the dataset
+dataset_root: '/workspace/data/data_folder/o2o/all_features/gifs_11'
+
+# relative location of the annotations file
+train_annotations: 'train.pkl'
+val_annotations: 'val.pkl'
+test_annotations: 'test.pkl'
+device: 'cuda:2'
+
+iou_threshold: 0.5
+dis_threshold: 0.5
+max_num_edges: 144
+
+gif_size: 11
+
+loss_calculation: 'masked'
+comments: 'None'
+
+# wandb_configs
+wandb_project_name: 'ooi_icra_gcn'
+wandb_entity: 'aunmesh'
+
+log_results: True

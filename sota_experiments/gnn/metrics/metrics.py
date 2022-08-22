@@ -62,10 +62,13 @@ class metric_tracker:
             out_pred[k] = []
             out_gt[k] = []
 
+        # num_relations in different batch elements
         num_relations = torch.split(mask, 1)
 
         for b, n in enumerate(num_relations):
+
             temp_num_relation = int(torch.sum(n))
+            # temp_num_relation = int(n)
 
             for k in self.relation_keys:
                 out_gt[k].append( gt[k][b,:temp_num_relation,:] )
@@ -80,10 +83,9 @@ class metric_tracker:
 
 
     # Accumulates all the tensors using mask in one matrix
-    def make_tensor(self, predictions, gt, mask):
+    def make_tensor_random(self, predictions, gt, mask):
         '''
-        This function makes a combined tensor for ground truth and predictions using the mask
-
+        This function calculates random performance
             pred: pred is a dictionary of predictions
             gt  : gt is dictionary of ground truth labels
             mask: mask is the places which should be considered 
@@ -112,17 +114,15 @@ class metric_tracker:
                     
                     out_pred[k].append( temp_vec_2 )
 
-
         for k in self.relation_keys:
             out_gt[k] = torch.cat(out_gt[k], 0)
             out_pred[k] = torch.cat(out_pred[k], 0)
-
 
         return out_pred, out_gt
 
 
     def calc_metrics(self, pred, gt):
-        
+
         result = {}
 
         mask = gt['num_relation']

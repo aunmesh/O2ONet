@@ -10,7 +10,7 @@ batch_size_test: 203
 save_epoch: 1
 
 model_name: 'ooi_net'
-GNN: 'GCN'
+GNN: 'GATConv'
 
 model_saving_path: '/workspace/work/results_ICRA_gcn/'
 
@@ -49,3 +49,8 @@ gif_size: 11
 loss_calculation: 'masked'
 
 comments: 'None'
+
+
+# wandb_configs
+wandb_project_name: 'ooi_icra_gcn'
+wandb_entity: 'aunmesh'

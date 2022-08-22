@@ -7,25 +7,29 @@ import loss
 from utils.utils import process_data_for_fpass, process_data_for_metrics, loss_epoch_aggregator
 from tqdm import tqdm as tqdm
 
-def train(model, train_loader, optimizer, config, metric_tracker):
+def train(model, train_loader, optimizer, config, criterions, metric_tracker):
     """
     Args:
-        model     :
+        model       :
         train_loader:
         optimizer   : 
-        config    :
+        config      :
         metric_tracker:
     
     Returns:
         train_result:
     """
+    ### set model to train model
+    model = model.train()
     
     ### For aggregating the loss across various epochs
     loss_aggregator = loss_epoch_aggregator(stage='train')
 
     ### Trains for One Epoch
-    for _, d_item in tqdm(enumerate(train_loader)):
+    for _, data_item in enumerate(train_loader):
 
+        d_item, idx = data_item
+        
         ### Re-setting optimizer
         optimizer.zero_grad()
         
@@ -36,7 +40,7 @@ def train(model, train_loader, optimizer, config, metric_tracker):
         output_dict = model(d_item)
 
         ### Loss Calculation
-        loss_dict = loss.masked_loss(output_dict, d_item)
+        loss_dict = loss.masked_loss(output_dict, d_item, criterions)
         
         ### Backward Pass
         loss_dict['loss_total'].backward()
@@ -52,7 +56,6 @@ def train(model, train_loader, optimizer, config, metric_tracker):
         
         ### Optimizing the Model
         optimizer.step()
-        break
     
     ### Aggregating metrics across all iterations
     metric_dict = metric_tracker.aggregate_metrics()

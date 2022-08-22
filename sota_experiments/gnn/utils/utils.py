@@ -173,8 +173,13 @@ def process_data_for_fpass(data_item, config):
 
     # geometric_feature - select the central frame
     # shape: [batch_size, num_obj, num_frames, f_size]
-    data_item['central_frame_geometric_feature'] = data_item['geometric_feature'][:, :, central_frame_index, :]
-    data_item['central_frame_motion_feature'] = data_item['motion_feature'][:, :, central_frame_index, :]
+    
+    # data_item['central_frame_geometric_feature'] = data_item['geometric_feature'][:, :, central_frame_index, :]
+    # data_item['central_frame_motion_feature'] = data_item['motion_feature'][:, :, central_frame_index, :]
+
+    data_item['central_frame_geometric_feature'] = data_item['geometric_feature'].flatten(2)
+    data_item['central_frame_motion_feature'] = data_item['motion_feature'][:, :, central_frame_index, :].flatten(2)
+
 
     # Padded features
     obj_features = [ data_item[f] for f in config['features_list'] ]
