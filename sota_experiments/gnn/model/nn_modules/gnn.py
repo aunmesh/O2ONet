@@ -36,6 +36,7 @@ class GNN(nn.Module):
         forward pass can be represented as Dropout(Relu(GC(x)))
         where GC is Graph Convolution
         '''
+
         for i in range(len(self.gc_layers)):
             x = F.relu(self.gc_layers[i](x, edge_index))
             x = F.dropout(x, self.dropout)

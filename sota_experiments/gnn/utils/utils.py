@@ -177,7 +177,8 @@ def process_data_for_fpass(data_item, config):
     # data_item['central_frame_geometric_feature'] = data_item['geometric_feature'][:, :, central_frame_index, :]
     # data_item['central_frame_motion_feature'] = data_item['motion_feature'][:, :, central_frame_index, :]
 
-    data_item['central_frame_geometric_feature'] = data_item['geometric_feature'].flatten(2)
+    data_item['central_frame_geometric_feature'] = data_item['geometric_feature'][:, :, central_frame_index, :]
+    # data_item['central_frame_geometric_feature'] = data_item['geometric_feature'].flatten(2)
     data_item['central_frame_motion_feature'] = data_item['motion_feature'][:, :, central_frame_index, :].flatten(2)
 
 
@@ -185,39 +186,59 @@ def process_data_for_fpass(data_item, config):
     obj_features = [ data_item[f] for f in config['features_list'] ]
     obj_features = torch.cat(obj_features, 2)
 
-
-    # Padded Edge Index
-
-    collated_obj_features, node_slicing = collate_node_features(obj_features, 
-                                                    data_item['num_obj'], config['device']
-                                                        )
-
-    collated_edge_index, edge_slicing = collate_edge_indices(data_item['edge_index'], 
-                            data_item['num_edges'], data_item['num_obj'], config['device']
-                                                        )
-
     data_item['edge_index'] = data_item['edge_index'].to(config['device'])
     data_item['num_edges'] = data_item['num_edges'].to(config['device'])
     data_item['num_obj'] = data_item['num_obj'].to(config['device'])
-
-    data_item['collated_obj_features'] = collated_obj_features.to(config['device'])
-    data_item['collated_obj_features'] = data_item['collated_obj_features'].type(torch.double)
-    
-    data_item['collated_edge_index'] = collated_edge_index.to(config['device'])
-
-    # Create the slicing dictionary in train.py from incoming 
-    # features and incoming edge indices.
-
-    data_item['slicing'] = {}
-
-    data_item['slicing']['node'] = node_slicing
-    data_item['slicing']['edge'] = edge_slicing
 
     data_item['object_pairs'] = data_item['object_pairs'].type(torch.long)
     
     data_item['lr'] = data_item['lr'].to(config['device'])
     data_item['mr'] = data_item['mr'].to(config['device'])
     data_item['cr'] = data_item['cr'].to(config['device'])
+    
+
+
+    # Padded Edge Index
+    if config['model_name'] == 'ooi_net':
+
+        collated_obj_features, node_slicing = collate_node_features(
+                                                                    obj_features, 
+                                                                    data_item['num_obj'], 
+                                                                    config['device']
+                                                                    )
+
+        collated_edge_index, edge_slicing = collate_edge_indices(
+                                                                data_item['edge_index'], 
+                                                                data_item['num_edges'], 
+                                                                data_item['num_obj'], 
+                                                                config['device']
+                                                                )
+
+
+        data_item['collated_obj_features'] = collated_obj_features.to(config['device'])
+        data_item['collated_obj_features'] = data_item['collated_obj_features'].type(torch.double)
+        
+        data_item['collated_edge_index'] = collated_edge_index.to(config['device'])
+
+        # Create the slicing dictionary in train.py from incoming 
+        # features and incoming edge indices.
+
+        data_item['slicing'] = {}
+
+        data_item['slicing']['node'] = node_slicing
+        data_item['slicing']['edge'] = edge_slicing
+
+    if config['model_name'] == 'GPNN':
+        data_item['concatenated_node_features'] = obj_features.to(config['device'])
+        data_item['relative_spatial_feature'] = data_item['relative_spatial_feature'].flatten(3).to(config['device'])
+ 
+
+    # print("DEBUG")
+    # print(data_item.keys())
+    # print(data_item['relative_spatial_feature'].size())
+    # print(data_item['collated_obj_features'].size())
+    # print(data_item['geometric_feature'].size())
+
     
     return data_item
 

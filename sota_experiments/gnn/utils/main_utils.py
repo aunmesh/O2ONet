@@ -1,6 +1,8 @@
 from model.nn_nets.ooi_net import ooi_net as ooi_net
+from model.nn_nets.gpnn import GPNN as GPNN
 import torch
 import os
+from dataloader.dataset import dataset
 
 
 def get_model(config):
@@ -10,8 +12,10 @@ def get_model(config):
         model = ooi_net(config).to(config['device'])
         return model
 
+    if config['model_name'] == 'GPNN':
 
-from dataloader.dataset import dataset
+        model = GPNN(config).to(config['device'])
+        return model
 
 
 def get_dataset(config, split='train'):

@@ -11,23 +11,23 @@ optimizer: 'Adam'
 # After how many epochs to save the model
 save_epoch: 1
 
-model_name: 'ooi_net'
-GNN: 'GCN'
+model_name: 'GPNN'
+GNN: 'GPNN'
 overfit: False
 
-model_saving_path: '/workspace/work/results_ICRA_gcn/'
+model_saving_path: '/workspace/work/results_ICRA_gpnn/'
 
 # Neural Network dimensions
 gcn_dimensions : [1148, 512, 256, 128, 64]
 gcn_dropout : 0.15
 
-cr_dimensions : [64, 32, 3]
+cr_dimensions : [512, 32, 3]
 cr_dropout : 0.15
 
-lr_dimensions : [64, 32, 5]
+lr_dimensions : [512, 32, 5]
 lr_dropout : 0.15
 
-mr_dimensions : [64, 32, 14]
+mr_dimensions : [512, 32, 14]
 mr_dropout : 0.15
 aggregator : 'mean'
 
@@ -57,3 +57,16 @@ wandb_project_name: 'ooi_icra_gcn'
 wandb_entity: 'aunmesh'
 
 log_results: False
+
+# model args for gpnn
+'edge_feature_size': 220
+'node_feature_size': 1098
+'message_size': 512
+'link_hidden_size': 512 
+'link_hidden_layers': 2
+'link_relu': False
+'update_hidden_layers': 1
+'update_dropout': 0.0
+'update_bias': True
+'propagate_layers': 3
+'resize_feature_to_message_size': True

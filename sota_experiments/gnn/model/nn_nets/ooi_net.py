@@ -54,12 +54,14 @@ class ooi_net(nn.Module):
         mr_dropout = config['mr_dropout']
         self.mr_cls = relation_classifier(mr_dim, mr_dropout, self.device)
         
+        
         # Hyperparameters to process node embeddings for classification
         self.agg = config['aggregator']
         self.classifier_input_dimension = gcn_dim[-1]
 
 
     def make_classifier_inputs(self, node_embeddings, pairs):
+
         '''
         makes the classifier input from the node embeddings and pairs
 
