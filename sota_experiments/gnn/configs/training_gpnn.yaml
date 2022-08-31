@@ -9,7 +9,7 @@ features_list: ['central_frame_geometric_feature', 'cnn_bbox_feature', 'i3d_feat
 optimizer: 'Adam'
 
 # After how many epochs to save the model
-save_epoch: 1
+save_epoch: 5
 
 model_name: 'GPNN'
 GNN: 'GPNN'
@@ -18,16 +18,13 @@ overfit: False
 model_saving_path: '/workspace/work/results_ICRA_gpnn/'
 
 # Neural Network dimensions
-gcn_dimensions : [1148, 512, 256, 128, 64]
-gcn_dropout : 0.15
-
-cr_dimensions : [512, 32, 3]
+cr_dimensions : [256, 3]
 cr_dropout : 0.15
 
-lr_dimensions : [512, 32, 5]
+lr_dimensions : [256, 5]
 lr_dropout : 0.15
 
-mr_dimensions : [512, 32, 14]
+mr_dimensions : [256, 14]
 mr_dropout : 0.15
 aggregator : 'mean'
 
@@ -53,16 +50,16 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ooi_icra_gcn'
+wandb_project_name: 'ooi_icra_gpnn'
 wandb_entity: 'aunmesh'
 
-log_results: False
+log_results: True
 
 # model args for gpnn
 'edge_feature_size': 220
 'node_feature_size': 1098
-'message_size': 512
-'link_hidden_size': 512 
+'message_size': 256
+'link_hidden_size': 256 
 'link_hidden_layers': 2
 'link_relu': False
 'update_hidden_layers': 1

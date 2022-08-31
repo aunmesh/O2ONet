@@ -158,7 +158,7 @@ class GPNN(torch.nn.Module):
                     h_v = self.update_fun(h_v[None].contiguous(), m_v[None])
                     
                     # might need to change it for videos
-                    hidden_node_states[batch_idx][passing_round][0, :, i_node] = h_v[0][0]
+                    hidden_node_states[batch_idx][passing_round+1][0, :, i_node] = h_v[0][0]
 
         final_embeddings = [hidden_node_states[batch_idx][-1].permute(0, 2, 1) for batch_idx in range(batch_size)]
         final_embeddings = torch.cat(final_embeddings, 0)
