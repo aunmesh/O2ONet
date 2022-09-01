@@ -112,7 +112,7 @@ def main(args):
         
         ### Creating the test data loader
         test_dataset = get_dataset(config, 'test')
-        test_loader = DataLoader(test_dataset, batch_size=config['batch_size_test'])
+        test_loader = DataLoader(test_dataset, batch_size=config['test_batch_size'])
         
         ### Obtaining test result
         test_result = test(model, test_loader, config, test_metric_tracker )

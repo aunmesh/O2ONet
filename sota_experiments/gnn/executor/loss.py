@@ -28,7 +28,7 @@ def masked_loss_old(predictions, target, criterions):
     loss['loss_lr'] = 0
 
     keys = ['cr', 'lr', 'mr']
-
+    
     b_size = target['lr'].shape[0]
     
     predictions_temp = {}
@@ -86,11 +86,14 @@ def masked_loss(predictions, target, criterions):
     loss['loss_lr'] = 0
 
     keys = ['cr', 'lr', 'mr']
+    norm_vals = {'cr' : 1, 'lr': 5, 'mr': 14}        
 
     b_size = target['lr'].shape[0]
-
+    tot_num_rels = 0
+    
     for b in range(b_size):
         curr_num_rel = int(mask[b])
+        tot_num_rels+=curr_num_rel
         
         temp_predictions = {}
         temp_targets = {}
@@ -100,21 +103,19 @@ def masked_loss(predictions, target, criterions):
             temp_targets = target[k][b, :curr_num_rel, :]
             
             temp_loss = criterions[k](temp_predictions, temp_targets)
+            temp_norm = norm_vals[k]
             
-            loss['loss_total']+=(temp_loss/b_size)
-            loss['loss_' + k]+=(temp_loss/b_size)
-
-    # print("DEBUG")
-    # show = 10
-    # print("###############")
-    # print(target['lr'].shape)
-    # print(predictions['lr'].shape)
-    # print( (F.sigmoid(predictions['lr']) >= 0.5)[:show] * 1 )
-    # print(target['lr'][:show])
-    # print( (F.sigmoid(predictions['mr']) >= 0.5)[:show] * 1 , target['mr'][:show])
-    # print( (F.softmax(predictions['cr']) >= 0.5)[:show] * 1 , target['cr'][:show])
-    # print("###############")
-
+            # loss['loss_total']+=(temp_loss/b_size)
+            loss['loss_' + k]+=(temp_loss/(temp_norm))
+    
+    # normalizing with total number of relation items    
+    for k in keys:
+        loss['loss_' + k]/=tot_num_rels
+    
+    # adding all losses together
+    for k in keys:
+        loss['loss_total'] += loss['loss_' + k]
+        
     return loss
 
 
