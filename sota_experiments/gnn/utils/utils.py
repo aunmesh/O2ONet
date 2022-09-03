@@ -1,4 +1,14 @@
 from torch_geometric.nn import TransformerConv, GCNConv, GATConv
+from executor.loss import *
+
+def get_loss(output, target, criterions, config=None):
+    
+    if config['model_name'] == 'GPNN':
+        if config['loss'] == 'masked loss':
+            return masked_loss(output, target, criterions)
+        if config['loss'] == 'masked loss with positive label encouragement':
+            return masked_loss_encouraging_positive(output, target, criterions, config['pcp_hyperparameter'])
+
 
 def get_gnn(config, in_dim, out_dim):
     

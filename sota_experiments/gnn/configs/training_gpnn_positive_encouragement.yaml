@@ -8,10 +8,11 @@ features_list: ['central_frame_geometric_feature', 'cnn_bbox_feature', 'i3d_feat
 
 optimizer: 'Adam'
 
+loss: 'masked loss with positive label encouragement'
+pcp_hyperparameter: 0.0001
+
 # After how many epochs to save the model
 save_epoch: 5
-
-loss: 'masked loss'
 
 model_name: 'GPNN'
 GNN: 'GPNN'

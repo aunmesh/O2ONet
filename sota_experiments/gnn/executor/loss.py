@@ -86,7 +86,7 @@ def masked_loss(predictions, target, criterions):
     loss['loss_lr'] = 0
 
     keys = ['cr', 'lr', 'mr']
-    norm_vals = {'cr' : 1, 'lr': 5, 'mr': 14}        
+    # norm_vals = {'cr' : 1, 'lr': 5, 'mr': 14}        
 
     b_size = target['lr'].shape[0]
     tot_num_rels = 0
@@ -103,21 +103,71 @@ def masked_loss(predictions, target, criterions):
             temp_targets = target[k][b, :curr_num_rel, :]
             
             temp_loss = criterions[k](temp_predictions, temp_targets)
-            temp_norm = norm_vals[k]
-            
-            # loss['loss_total']+=(temp_loss/b_size)
-            loss['loss_' + k]+=(temp_loss/(temp_norm))
+            loss['loss_' + k]+=temp_loss
     
-    # normalizing with total number of relation items    
-    for k in keys:
-        loss['loss_' + k]/=tot_num_rels
     
     # adding all losses together
     for k in keys:
         loss['loss_total'] += loss['loss_' + k]
-        
+
+    loss['loss_total']/=( 1.0 * len(keys))
+
     return loss
 
+
+def masked_loss_encouraging_positive(predictions, target, criterions, pcp_hyperparameter):
+
+    '''
+    predictions : list of dimension [b_size, max_num_obj_pairs, num_classes]
+    target      : list of dimension [b_size, max_num_obj_pairs, num_classes]
+                  they correspond with the predictions
+    mask        : A mask of dimension [b_size, max_num_obj_pairs]
+    pcp_hyperparameter: A hyperparameter for positive content penalty
+    '''
+
+    mask = target['num_relation']
+
+    loss = {}
+    loss['loss_total'] = 0
+    loss['loss_cr'] = 0
+    loss['loss_mr'] = 0
+    loss['loss_lr'] = 0
+
+    keys = ['cr', 'lr', 'mr']
+
+    b_size = target['lr'].shape[0]
+    tot_num_rels = 0
+    
+    positive_content_penalty = {}
+    
+    
+    for b in range(b_size):
+        curr_num_rel = int(mask[b])
+        tot_num_rels+=curr_num_rel
+        
+        temp_predictions = {}
+        temp_targets = {}
+        
+        for k in keys:
+            temp_predictions = predictions[k][b, :curr_num_rel, :]
+            temp_targets = target[k][b, :curr_num_rel, :]
+            
+            temp_loss = criterions[k](temp_predictions, temp_targets)
+            
+            if k =='lr' or k== 'mr':
+                positive_content_penalty[k] = torch.mean(1 - torch.sigmoid(temp_predictions))
+             
+            loss['loss_' + k]+=temp_loss
+
+    for k in keys:
+        loss['loss_total'] += loss['loss_' + k]
+
+    loss['loss_total']/=( 1.0 * len(keys))
+    
+    for k in ['lr', 'mr']:
+        loss['loss_total']+=(pcp_hyperparameter * positive_content_penalty[k] * 0.5)
+
+    return loss
 
 
 def segmentation_loss(input, target, mask):

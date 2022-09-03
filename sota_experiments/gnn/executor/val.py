@@ -2,7 +2,7 @@
 # Dependencies: loss, metrics, maybe some util files
 # Called by: main.py
 import loss
-from utils.utils import process_data_for_fpass, process_data_for_metrics, loss_epoch_aggregator
+from utils.utils import process_data_for_fpass, process_data_for_metrics, loss_epoch_aggregator, get_loss
 
 
 def val( model, val_loader, config, criterions, metric_tracker):
@@ -37,7 +37,7 @@ def val( model, val_loader, config, criterions, metric_tracker):
         output_dict = model(d_item)
         
         # Getting Loss values
-        loss_dict = loss.masked_loss(output_dict, d_item, criterions)
+        loss_dict = get_loss(output_dict, d_item, criterions, config)
         
         ### Adding to loss aggregator
         loss_aggregator.add(loss_dict)

@@ -4,7 +4,7 @@
 
 import torch
 import loss
-from utils.utils import process_data_for_fpass, process_data_for_metrics, loss_epoch_aggregator
+from utils.utils import process_data_for_fpass, process_data_for_metrics, loss_epoch_aggregator, get_loss
 from tqdm import tqdm as tqdm
 
 def train(model, train_loader, optimizer, config, criterions, metric_tracker):
@@ -40,7 +40,7 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
         output_dict = model(d_item)
 
         ### Loss Calculation
-        loss_dict = loss.masked_loss(output_dict, d_item, criterions)
+        loss_dict = get_loss(output_dict, d_item, criterions, config)
         
         ### Backward Pass
         loss_dict['loss_total'].backward()
