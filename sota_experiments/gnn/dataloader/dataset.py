@@ -62,6 +62,7 @@ class dataset(Dataset):
         
         # remove self loops and make it undirected
         temp_edge_index = tg_utils.remove_self_loops(temp_edge_index)[0]
+        temp_edge_index = tg_utils.add_self_loops(temp_edge_index)[0]
         temp_edge_index = tg_utils.to_undirected(temp_edge_index)
 
         max_num_edges = int(self.config['max_num_edges'])
@@ -72,7 +73,6 @@ class dataset(Dataset):
 
         edge_index[:,:num_edges] = temp_edge_index        
         data_item['edge_index'] = edge_index
-        
         
         return data_item
 

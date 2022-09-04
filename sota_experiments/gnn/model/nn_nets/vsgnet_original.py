@@ -150,28 +150,19 @@ class VSGNet(nn.Module):
             
         )
 
-        ################################################
-        
-        
-        
         ####### Prediction model for graph features##################
+
         self.lin_graph_head=nn.Sequential(
-            #nn.Linear(2048, 29),
-        #nn.Dropout2d(p=0.5),
-        nn.Linear(lin_size*2, 1024),
-        nn.Linear(1024,512),
+                                        nn.Linear(lin_size*2, 1024),
+                                        nn.Linear(1024,512),
+                                        nn.ReLU(),
+                                         )
         
-            nn.ReLU(),
-            
-        )
         self.lin_graph_tail=nn.Sequential(
-            nn.Linear(512,29),
-            
-        )
+                                        nn.Linear(512,29)
+                                        )
 
         ########################################
-
-
 		self.sigmoid=nn.Sigmoid()
 		
 	

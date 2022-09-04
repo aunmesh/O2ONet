@@ -2,21 +2,13 @@ import torch
 import torch.nn as nn
 from utils.utils import aggregate
 
+from nn_modules.visual_branch_vsgnet import VisualBranch_vsgnet
+from nn_modules.spatial_branch_vsgnet import SpatialBranch_vsgnet
+from nn_modules.graphical_branch_vsgnet import GraphicalBranch_vsgnet
 
-# 3 branches - Visual Branch, Spatial Branch, Graphical Branch
-
-# Visual Branch 
-# 2 subbranches = object branch and context branch
-# Object branch input = resnet 52 feature map, object bounding box. Output = feature vector for object
-# Context branch input = resnet, output = feature vector for context
-# visual branch combines them together and outputs the feature vector for the 2 objects together
-
-
-
-
-class vsg_net(nn.Module):
+class vsgnet(nn.Module):
     '''
-    vsg_net stands for Visual Spatial Graphical Network
+    vsgnet stands for Visual Spatial Graphical Network
 
     Uses:
     '''
@@ -26,7 +18,7 @@ class vsg_net(nn.Module):
         '''
         Constructor for vsgnet
         Args:
-        vsg_net_config_file : Has the various configurations necessary for this network
+        vsgnet_config_file : Has the various configurations necessary for this network
                               This config file has information on the static and temporal feature
                               dimensions along with other things.
         '''
@@ -35,69 +27,141 @@ class vsg_net(nn.Module):
         self.config = config
 
         # creating the gcn
-        self.device = config['device']
+        self.graphical_branch = GraphicalBranch_vsgnet(config)
+        self.spatial_branch = SpatialBranch_vsgnet(config)
+        self.visual_branch = VisualBranch_vsgnet(config)
         
+        self.refined_branch_classifiers = {}
+        self.graphical_branch_classifiers = {}
+        self.spatial_branch_classifiers = {}
+        self.relation_keys = ['lr', 'mr', 'cr']
+
+        for k in self.relation_keys:
+            temp_dimension = 'refined_branch_' + k + '_classifier_dimension'
+            self.refined_branch_classifiers[k] = self.make_classifier(temp_dimension)
+            
+            temp_dimension = 'spatial_branch_' + k + '_classifier_dimension'
+            self.spatial_branch_classifiers[k] = self.make_classifier(temp_dimension)
+
+            temp_dimension = 'graphical_branch_' + k + '_classifier_dimension'
+            self.graphical_branch_classifiers[k] = self.make_classifier(temp_dimension)
+    
+
+    def make_classifier(self, dimensions, key):
+
+        classifier_layers = nn.ModuleList()  # for storing all the transform layers
+
+        for i in range(len(dimensions) - 1):
+            curr_d = dimensions[i]
+            next_d = dimensions[i+1]
+
+            temp_fc_layer = nn.Linear(curr_d, next_d)
+            classifier_layers.append(temp_fc_layer)
+            
+            if i < len(dimensions) - 2:
+                classifier_layers.append(nn.ReLU())
+        
+        if key == 'scr':
+            classifier_layers.append( nn.Softmax(dim=1) )
+        
+        else:
+            classifier_layers.append( nn.Sigmoid(dim=1) )
+            
+
+        return classifier_layers
 
 
-    def make_classifier_inputs(self, node_embeddings, pairs):
+    def pair_graphical_branch_output(
+                                            self, graphical_branch_output, num_rels, 
+                                            num_obj, obj_pairs
+                                          ):
 
-        '''
-        makes the classifier input from the node embeddings and pairs
+        graphical_branch_output_dim = graphical_branch_output.shape[-1]
 
-        node_embeddings: Embeddings of the various nodes
+        tot_num_rels = torch.sum(num_rels)
+        graphical_branch_paired = torch.zeros(
+                                                    (
+                                                    tot_num_rels, 
+                                                    graphical_branch_output_dim
+                                                    ), 
+                                                    device = self.config['device'], 
+                                                    dtype=torch.double
+                                                   )
+        
+        batch_size = num_rels.shape[0]
+                
+        # verify this again carefully
+        for curr_batch in range(batch_size):
+            
+            curr_num_rels = num_rels[curr_batch]
+            object_index_offset = torch.sum(num_obj[:curr_batch])
+            relation_index_offset = torch.sum(num_rels[:curr_batch])
+            
+            for j in range(curr_num_rels):
 
-        pairs: list of object pairs between which we have to do classification. 
-               the object pairs are actually indices in the node_embeddings rows.
+                obj_ind_0, obj_ind_1 = obj_pairs[curr_batch, j]
+                
+                obj_ind_0 += object_index_offset
+                obj_ind_1 += object_index_offset
 
-        pairs: A tensor of shape [b_size, MAX_PAIRS, 2]
-               b_size is batch size, MAX_PAIRS is the maximum no. of pairs
-        '''
+                obj_vec_0 = graphical_branch_output[obj_ind_0]
+                obj_vec_1 = graphical_branch_output[obj_ind_1]
 
-        # Not implemented yet, checking whether the input
-        # dimension of classifier matches the node embedding
-        # Assume that an entire batch is coming
+                temp_obj_vector = aggregate(obj_vec_0, obj_vec_1, 'mean')
+                
+                temp_relation_index = relation_index_offset + j
+                
+                graphical_branch_paired[temp_relation_index, :] = temp_obj_vector
+        
+        return graphical_branch_paired
 
-        num_batches = node_embeddings.shape[0]
-
-        num_pairs = pairs.shape[1]   # Always equal to max pairs
-
-        # classifier_input is the tensor which will be passed to the fully connected classifier
-        # for feature classification
-        classifier_input = torch.empty(
-            num_batches, num_pairs, self.classifier_input_dimension, device=self.device)
-
-        for b in range(num_batches):
-
-            for i in range(num_pairs):
-
-                ind0, ind1 = pairs[b, i, 0], pairs[b, i, 1]
-
-                emb0, emb1 = node_embeddings[b, ind0], node_embeddings[b, ind1]
-                classifier_input[b, i] = aggregate(emb0, emb1, self.agg)
-
-        return num_pairs, classifier_input
 
     def forward(self, data_item):
         '''
-        Input:
+        Input: data_item
 
-        Output:
+        Output: dictionary with the predictions for all the classes
         '''
 
-        # Flow
+       
+        
+        object_branch_output, f_oo_vis  = self.visual_branch(data_item)
+        spatial_branch_output = self.spatial_branch(data_item)
+        graphical_branch_output = self.graphical_branch(data_item, object_branch_output)
+        
+        # refine the output from spatial_branch and f_oo_vis
+        spatial_visual_refined_features = f_oo_vis * spatial_branch_output
+        
+        # all the incoming features are ordered according to object_pairs for each batch elements
+        
+        # classify using the spatial branch only
 
-        frame_feature_map = data_item['frame_deep_features']
-        bboxes = data_item['bboxes']
+        res_spatial = {}
+        for k in self.relation_keys:
+            res_spatial[k] = self.spatial_branch_classifiers[k](spatial_branch_output)
+
+        # classify using the refined features
+        res_refined = {}
+        for k in self.relation_keys:
+            res_refined[k] = self.refined_branch_classifiers[k](spatial_visual_refined_features)
+        
+        # classify using the graphical features
+
         num_obj = data_item['num_obj']
         obj_pairs = data_item['object_pairs']
         num_rels = data_item['num_relation']
+        graphical_branch_output_paired = self.pair_graphical_branch_output(
+                                                            graphical_branch_output,
+                                                            num_rels, num_obj, obj_pairs
+                                                                           )
+        res_graphical = {}
+        for k in self.relation_keys:
+            res_graphical[k] = self.graphical_branch_classifiers[k](
+                                            graphical_branch_output_paired
+                                                                    )
         
-        visual_branch_output = self.visual_branch(frame_feature_map, bboxes, num_obj, obj_pairs, num_rels)
+        result = {}
+        for k in self.relation_keys:
+            result[k] = res_spatial[k] * res_refined[k] * res_graphical[k]
         
-        spatial_branch_output = self.spatial_branch(frame_feature_map, bboxes, num_obj, obj_pairs, num_rels)
-        
-        
-        
-        
-        
-        return predictions
+        return result

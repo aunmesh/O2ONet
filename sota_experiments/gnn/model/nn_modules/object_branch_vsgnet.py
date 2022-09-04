@@ -19,7 +19,7 @@ class ObjectBranch_vsgnet(torch.nn.Module):
 				nn.ReLU(inplace=False)
 				                        )
         
-        self.pool_size = tuple(self.config['pool_size'])
+        self.pool_size = tuple(self.config['roi_pool_size'])
         self.spatial_scale = self.config['spatial_scale']
         self.sampling_ratio = self.config['sampling_ratio']
         
@@ -39,7 +39,7 @@ class ObjectBranch_vsgnet(torch.nn.Module):
         
         height_scale = fmap_height/(im_height*1.0)
         width_scale = fmap_width/(im_width*1.0)
-        bboxes_scaled = bboxes
+        bboxes_scaled = bboxes.clone()
         bboxes_scaled[:,:,0] = bboxes[:,:,0] * width_scale
         bboxes_scaled[:,:,2] = bboxes[:,:,2] * width_scale
         bboxes_scaled[:,:,1] = bboxes[:,:,1] * height_scale
@@ -69,9 +69,7 @@ class ObjectBranch_vsgnet(torch.nn.Module):
             bboxes_list[i] = b[:temp_num_obj]
         
         roi_pool_objects = self.pooler(frame_feature_map, bboxes_list)
-        
-        
-	
+
         ##Objects##
         residual_objects = roi_pool_objects
         res_objects = self.Conv_objects(roi_pool_objects) + residual_objects

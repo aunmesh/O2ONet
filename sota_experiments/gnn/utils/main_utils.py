@@ -3,7 +3,29 @@ from model.nn_nets.gpnn import GPNN as GPNN
 import torch
 import os
 from dataloader.dataset import dataset
+from dataloader.vsgnet_dataset import vsgnet_dataset
+import torch.nn as nn
 
+def construct_criterions(config):
+    
+    if config['model_name'] == 'vsgnet':
+        
+        criterions = {}
+        
+        criterions['cr'] = nn.NLLLoss().to(config['device'])
+        criterions['lr'] = nn.BCELoss().to(config['device'])
+        criterions['mr'] = nn.BCELoss().to(config['device'])
+        
+        return criterions
+
+    criterions = {}
+    
+    criterions['cr'] = nn.CrossEntropyLoss().to(config['device'])
+    criterions['lr'] = nn.BCEWithLogitsLoss().to(config['device'])
+    criterions['mr'] = nn.BCEWithLogitsLoss().to(config['device'])
+    
+    return criterions
+        
 
 def get_model(config):
 
@@ -23,6 +45,10 @@ def get_dataset(config, split='train'):
     if config['dataset_description'] == 'ooi_dataset':
 
         return dataset(config, split)
+
+    if config['dataset_description'] == 'vsgnet_dataset':
+
+        return vsgnet_dataset(config, split)
 
 
 

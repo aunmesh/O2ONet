@@ -1,13 +1,23 @@
 from torch_geometric.nn import TransformerConv, GCNConv, GATConv
 from executor.loss import *
+from work.O2ONet.sota_experiments.gnn.model.nn_nets.vsgnet import vsgnet
 
 def get_loss(output, target, criterions, config=None):
     
     if config['model_name'] == 'GPNN':
+        
         if config['loss'] == 'masked loss':
             return masked_loss(output, target, criterions)
+        
         if config['loss'] == 'masked loss with positive label encouragement':
-            return masked_loss_encouraging_positive(output, target, criterions, config['pcp_hyperparameter'])
+            return masked_loss_encouraging_positive(
+                                                    output, target, 
+                                                    criterions, 
+                                                    config['pcp_hyperparameter']
+                                                    )
+        
+        if config['loss'] == 'masked loss vsgnet':
+            return masked_loss_vsgnet(output, target, criterions)
 
 
 def get_gnn(config, in_dim, out_dim):
@@ -169,7 +179,8 @@ def pool_edge_features(edge_feature_mat, edge_index):
 def process_data_for_fpass(data_item, config):
    
    # obj_features, obj_pairs, slicing dictionary
-   
+    if config['model_name'] == vsgnet:
+        return data_item
    
     # Pre-process the feature tensors
     

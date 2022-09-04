@@ -14,21 +14,12 @@ class VisualBranch_vsgnet(torch.nn.Module):
         
         self.object_branch = ObjectBranch_vsgnet(self, config)
         self.context_branch = ContextBranch_vsgnet(self, config)
-        self.f_oo_vis = nn.Linear
+        self.f_oo_vis = nn.Sequential(
+                                        nn.Linear(1024*3, 1024),
+                                        nn.Linear(1024,512),
+                                        nn.ReLU()
+                                    )
 
-        self.f_oo_vis = nn.ModuleList()  # for storing all the transform layers
-        self.dimensions = self.config['f_oo_vis_dim']
-
-        for i in range(len(self.dimensions) - 1):
-
-            curr_d = self.dimensions[i]
-            next_d = self.dimensions[i+1]
-
-            temp_fc_layer = nn.Linear(curr_d, next_d)
-            self.layers.append(temp_fc_layer)
-            self.layers.append(nn.ReLU())
-
-    
     def prepare_f_oo_vis_input(
                                 self, num_rels, object_branch_output, 
                                 context_branch_output, num_obj, 
@@ -53,13 +44,14 @@ class VisualBranch_vsgnet(torch.nn.Module):
             
             curr_num_rels = num_rels[curr_batch]
             object_index_offset = torch.sum(num_obj[:curr_batch])
-            
-            curr_batch_pairs = obj_pairs[curr_batch, :curr_num_rels] + object_index_offset
             relation_index_offset = torch.sum(num_rels[:curr_batch])
             
             for j in range(curr_num_rels):
 
-                obj_ind_0, obj_ind_1 = curr_batch_pairs[j]
+                obj_ind_0, obj_ind_1 = obj_pairs[curr_batch, j]
+                
+                obj_ind_0 += object_index_offset
+                obj_ind_1 += object_index_offset
 
                 obj_vec_0 = object_branch_output[obj_ind_0]
                 obj_vec_1 = object_branch_output[obj_ind_1]
@@ -74,7 +66,6 @@ class VisualBranch_vsgnet(torch.nn.Module):
                                                                     temp_context_vector), 0)
         
         return input_f_oo_vis
-        
     
     def forward(self, data_item):
         
@@ -101,14 +92,12 @@ class VisualBranch_vsgnet(torch.nn.Module):
         # collect all the relevant object pairs into one large tensor for further processing
 
         
-        input_f_oo_vis  = self.prepare_f_oo_vis_input(
+        input_f_oo_vis = self.prepare_f_oo_vis_input(
                                                     num_rels, object_branch_output, 
                                                     context_branch_output, num_obj, 
                                                     obj_pairs
                                                     )
-        
+
         f_oo_vis_output = self.f_oo_vis(input_f_oo_vis)
         
         return object_branch_output, f_oo_vis_output
-
-        

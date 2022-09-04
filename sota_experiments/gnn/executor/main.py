@@ -28,11 +28,9 @@ def main(args):
     optimizer = get_optimizer(config, model)
     
     ### Construct criterions
-    criterions = {}
-    criterions['cr'] = nn.CrossEntropyLoss().to(config['device'])
-    criterions['lr'] = nn.BCEWithLogitsLoss().to(config['device'])
-    criterions['mr'] = nn.BCEWithLogitsLoss().to(config['device'])
+    criterions = construct_criterions(config)
     
+ 
     ### Load Logger  ( UNCOMMENT )
     if config['log_results']:
         logger = wandb_logger(config)
