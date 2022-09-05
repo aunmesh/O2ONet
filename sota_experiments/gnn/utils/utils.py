@@ -1,4 +1,4 @@
-from torch_geometric.nn import TransformerConv, GCNConv, GATConv
+from torch_geometric.nn import TransformerConv, GCNConv, GATConv, GATv2Conv
 from executor.loss import *
 
 def get_loss(output, target, criterions, config=None):
@@ -29,6 +29,10 @@ def get_gnn(config, in_dim, out_dim):
     
     if config['GNN'] == 'GATConv':
         return GATConv(in_dim, out_dim)
+
+    if config['GNN'] == 'GATv2Conv':
+        return GATv2Conv(in_dim, out_dim)
+
 
 from os import device_encoding
 import yaml

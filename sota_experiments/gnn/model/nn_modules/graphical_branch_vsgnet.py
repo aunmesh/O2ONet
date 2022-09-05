@@ -79,7 +79,7 @@ class GraphicalBranch_vsgnet(torch.nn.Module):
         combined_edge_index = torch.cat(edge_indices, dim=1)
 
         # Perform graphical convolution using pytorch geometric
-        self.graphical_obj_features = self.gnn(object_branch_output, combined_edge_index)
+        graphical_obj_features = self.gnn(object_branch_output, combined_edge_index)
 
         # output is the convolved embedding of each node
-        return self.graphical_obj_features, slicing_dict
+        return graphical_obj_features, slicing_dict
