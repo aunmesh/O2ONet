@@ -14,10 +14,11 @@ class GNN(nn.Module):
 
         super(GNN, self).__init__()
 
+        self.config = config
         self.gc_layers = nn.ModuleList()  # for storing all the Graph Convolution Layers
         self.dimensions = self.config['gnn_dimensions']
         self.dropout = self.config['gnn_dropout']
-        self.config = config
+        
 
         for i in range(len(self.dimensions) - 1):
             
@@ -26,6 +27,7 @@ class GNN(nn.Module):
 
             temp_gc_layer = get_gnn(self.config, curr_d, next_d)
             self.gc_layers.append(temp_gc_layer)
+        self.gc_layers = self.gc_layers.to(self.config['device'])
 
     def forward(self, x, edge_index):
 

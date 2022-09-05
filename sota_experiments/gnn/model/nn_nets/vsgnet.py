@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 from utils.utils import aggregate
 
-from nn_modules.visual_branch_vsgnet import VisualBranch_vsgnet
-from nn_modules.spatial_branch_vsgnet import SpatialBranch_vsgnet
-from nn_modules.graphical_branch_vsgnet import GraphicalBranch_vsgnet
+from model.nn_modules.visual_branch_vsgnet import VisualBranch_vsgnet
+from model.nn_modules.spatial_branch_vsgnet import SpatialBranch_vsgnet
+from model.nn_modules.graphical_branch_vsgnet import GraphicalBranch_vsgnet
 
 class vsgnet(nn.Module):
     '''
@@ -23,7 +23,7 @@ class vsgnet(nn.Module):
                               dimensions along with other things.
         '''
 
-        super(vsg_net, self).__init__()
+        super(vsgnet, self).__init__()
         self.config = config
 
         # creating the gcn
@@ -37,38 +37,38 @@ class vsgnet(nn.Module):
         self.relation_keys = ['lr', 'mr', 'cr']
 
         for k in self.relation_keys:
-            temp_dimension = 'refined_branch_' + k + '_classifier_dimension'
-            self.refined_branch_classifiers[k] = self.make_classifier(temp_dimension)
+            temp_dimension = self.config['refined_branch_' + k + '_classifier_dimension']
+            self.refined_branch_classifiers[k] = self.make_classifier(temp_dimension, k)
             
-            temp_dimension = 'spatial_branch_' + k + '_classifier_dimension'
-            self.spatial_branch_classifiers[k] = self.make_classifier(temp_dimension)
+            temp_dimension = self.config['spatial_branch_' + k + '_classifier_dimension']
+            self.spatial_branch_classifiers[k] = self.make_classifier(temp_dimension, k)
 
-            temp_dimension = 'graphical_branch_' + k + '_classifier_dimension'
-            self.graphical_branch_classifiers[k] = self.make_classifier(temp_dimension)
-    
+            temp_dimension = self.config['graphical_branch_' + k + '_classifier_dimension']
+            self.graphical_branch_classifiers[k] = self.make_classifier(temp_dimension, k)
+
 
     def make_classifier(self, dimensions, key):
 
-        classifier_layers = nn.ModuleList()  # for storing all the transform layers
+        classifier_layers = []  # for storing all the transform layers
 
         for i in range(len(dimensions) - 1):
             curr_d = dimensions[i]
             next_d = dimensions[i+1]
-
             temp_fc_layer = nn.Linear(curr_d, next_d)
             classifier_layers.append(temp_fc_layer)
             
             if i < len(dimensions) - 2:
                 classifier_layers.append(nn.ReLU())
         
-        if key == 'scr':
+        if key == 'cr':
             classifier_layers.append( nn.Softmax(dim=1) )
         
         else:
-            classifier_layers.append( nn.Sigmoid(dim=1) )
-            
+            classifier_layers.append( nn.Sigmoid() )
+        
+        model = nn.Sequential(*classifier_layers).to(self.config['device'])
 
-        return classifier_layers
+        return model
 
 
     def pair_graphical_branch_output(
@@ -78,14 +78,13 @@ class vsgnet(nn.Module):
 
         graphical_branch_output_dim = graphical_branch_output.shape[-1]
 
-        tot_num_rels = torch.sum(num_rels)
+        tot_num_rels = int(torch.sum(num_rels))
         graphical_branch_paired = torch.zeros(
                                                     (
                                                     tot_num_rels, 
                                                     graphical_branch_output_dim
                                                     ), 
-                                                    device = self.config['device'], 
-                                                    dtype=torch.double
+                                                    device = self.config['device']
                                                    )
         
         batch_size = num_rels.shape[0]
@@ -93,7 +92,7 @@ class vsgnet(nn.Module):
         # verify this again carefully
         for curr_batch in range(batch_size):
             
-            curr_num_rels = num_rels[curr_batch]
+            curr_num_rels = int(num_rels[curr_batch])
             object_index_offset = torch.sum(num_obj[:curr_batch])
             relation_index_offset = torch.sum(num_rels[:curr_batch])
             
@@ -101,15 +100,12 @@ class vsgnet(nn.Module):
 
                 obj_ind_0, obj_ind_1 = obj_pairs[curr_batch, j]
                 
-                obj_ind_0 += object_index_offset
-                obj_ind_1 += object_index_offset
-
-                obj_vec_0 = graphical_branch_output[obj_ind_0]
-                obj_vec_1 = graphical_branch_output[obj_ind_1]
+                obj_vec_0 = graphical_branch_output[int(obj_ind_0) + int(object_index_offset)]
+                obj_vec_1 = graphical_branch_output[int(obj_ind_1) + int(object_index_offset)]
 
                 temp_obj_vector = aggregate(obj_vec_0, obj_vec_1, 'mean')
                 
-                temp_relation_index = relation_index_offset + j
+                temp_relation_index = int(relation_index_offset + j)
                 
                 graphical_branch_paired[temp_relation_index, :] = temp_obj_vector
         
@@ -122,12 +118,10 @@ class vsgnet(nn.Module):
 
         Output: dictionary with the predictions for all the classes
         '''
-
-       
         
         object_branch_output, f_oo_vis  = self.visual_branch(data_item)
         spatial_branch_output = self.spatial_branch(data_item)
-        graphical_branch_output = self.graphical_branch(data_item, object_branch_output)
+        graphical_branch_output = self.graphical_branch(data_item, object_branch_output)[0]
         
         # refine the output from spatial_branch and f_oo_vis
         spatial_visual_refined_features = f_oo_vis * spatial_branch_output

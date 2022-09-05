@@ -1,6 +1,5 @@
 from torch_geometric.nn import TransformerConv, GCNConv, GATConv
 from executor.loss import *
-from work.O2ONet.sota_experiments.gnn.model.nn_nets.vsgnet import vsgnet
 
 def get_loss(output, target, criterions, config=None):
     
@@ -16,8 +15,8 @@ def get_loss(output, target, criterions, config=None):
                                                     config['pcp_hyperparameter']
                                                     )
         
-        if config['loss'] == 'masked loss vsgnet':
-            return masked_loss_vsgnet(output, target, criterions)
+    if config['loss_calculation'] == 'masked loss vsgnet':
+        return masked_loss_vsgnet(output, target, criterions)
 
 
 def get_gnn(config, in_dim, out_dim):
@@ -179,7 +178,16 @@ def pool_edge_features(edge_feature_mat, edge_index):
 def process_data_for_fpass(data_item, config):
    
    # obj_features, obj_pairs, slicing dictionary
-    if config['model_name'] == vsgnet:
+    if config['model_name'] == 'vsgnet':
+
+        tensor_keys = ['num_obj', 'bboxes', 'lr', 'mr', 'cr', 'object_pairs']
+        tensor_keys+= ['num_relation', 'frame_deep_features']
+
+        for k in tensor_keys:
+            data_item[k] = data_item[k].float().to(config['device'])
+        data_item['frame_deep_features'] = data_item['frame_deep_features'][:,5,:,:,:]
+        data_item['bboxes'] = data_item['bboxes'][:,:,5,:]
+        
         return data_item
    
     # Pre-process the feature tensors

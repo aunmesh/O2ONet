@@ -5,7 +5,7 @@ import torchvision
 class ObjectBranch_vsgnet(torch.nn.Module):
 
     def __init__(self, config):
-        
+
         super(ObjectBranch_vsgnet, self).__init__()
         self.config = config
 
@@ -17,29 +17,33 @@ class ObjectBranch_vsgnet(torch.nn.Module):
 				nn.Conv2d(512, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False),
 				nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
 				nn.ReLU(inplace=False)
-				                        )
-        
+				                        ).to(self.config['device'])
+
         self.pool_size = tuple(self.config['roi_pool_size'])
         self.spatial_scale = self.config['spatial_scale']
         self.sampling_ratio = self.config['sampling_ratio']
-        
+
         self.pooler = torchvision.ops.RoIAlign(
                                                 self.pool_size, 
                                                 self.spatial_scale, 
                                                 self.sampling_ratio
-                                               )    
-        self.obj_pool = nn.AvgPool2d(self.pool_size, padding=0, stride=(1,1)) # Global average pooling
+                                               ).to(self.config['device'])    
 
-    
+        # Global average pooling
+        self.obj_pool = nn.AvgPool2d(self.pool_size, padding=0, stride=(1,1)).to(self.config['device'])
+
+
+
     def scale_bboxes(self, bboxes, frame_feature_map_shape, image_dimension):
         
         # Get the output from subbranch for all the objects
         im_height, im_width = image_dimension
-        fmap_height, fmap_width = frame_feature_map_shape
+        fmap_height, fmap_width = frame_feature_map_shape[-2:]
         
         height_scale = fmap_height/(im_height*1.0)
         width_scale = fmap_width/(im_width*1.0)
         bboxes_scaled = bboxes.clone()
+
         bboxes_scaled[:,:,0] = bboxes[:,:,0] * width_scale
         bboxes_scaled[:,:,2] = bboxes[:,:,2] * width_scale
         bboxes_scaled[:,:,1] = bboxes[:,:,1] * height_scale
@@ -48,7 +52,6 @@ class ObjectBranch_vsgnet(torch.nn.Module):
         return bboxes_scaled
 
 
-        
     def forward(self, frame_feature_map, bboxes, num_obj, image_dimension):
         
         # Get roi_values of the objects
@@ -56,8 +59,7 @@ class ObjectBranch_vsgnet(torch.nn.Module):
         central_frame_index = int(num_frames/2)
         
         # getting the bboxes for the central frame
-        bboxes_sliced = bboxes[:, :, central_frame_index, :]
-        bboxes_scaled = self.scale_bboxes(bboxes_sliced, frame_feature_map.shape, image_dimension)
+        bboxes_scaled = self.scale_bboxes(bboxes, frame_feature_map.shape, image_dimension)
 
         # Get 10*10 roi pool of all the regions 
         bboxes_list = torch.split(bboxes_scaled, 1, dim=0)

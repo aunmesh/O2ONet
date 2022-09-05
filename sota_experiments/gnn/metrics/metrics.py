@@ -78,18 +78,59 @@ class metric_tracker:
             out_gt[k] = torch.cat(out_gt[k], 0)
             out_pred[k] = torch.cat(out_pred[k], 0)
 
-
         return out_pred, out_gt
+
+
+
+
+    # Accumulates all the tensors using mask in one matrix
+    def make_tensor_vsgnet(self, predictions, gt, mask):
+        '''
+        This function makes a combined tensor for ground truth and predictions using the mask
+
+            pred: pred is a dictionary of predictions
+            gt  : gt is dictionary of ground truth labels
+            mask: mask is the places which should be considered 
+        '''
+        
+        out_gt = {}
+
+        for k in self.relation_keys:
+            out_gt[k] = []
+
+        # num_relations in different batch elements
+        num_relations = torch.sum(mask)
+        batch_size = mask.shape[0]
+        
+        lower_index = 0
+        upper_index = 0
+        
+        for b in range(batch_size):
+            
+            upper_index = int(torch.sum(mask[:b]))
+            temp_num_relation = int(mask[b])
+
+            for k in self.relation_keys:
+                out_gt[k].append( gt[k][b,:temp_num_relation,:] )
+
+        for k in self.relation_keys:
+            out_gt[k] = torch.cat(out_gt[k], 0)
+
+        return predictions, out_gt
+
+
 
 
     # Accumulates all the tensors using mask in one matrix
     def make_tensor_random(self, predictions, gt, mask):
+
         '''
         This function calculates random performance
             pred: pred is a dictionary of predictions
             gt  : gt is dictionary of ground truth labels
             mask: mask is the places which should be considered 
         '''
+
         out_gt = {}
         out_pred = {}
 
@@ -124,9 +165,12 @@ class metric_tracker:
     def calc_metrics(self, pred, gt):
 
         result = {}
-
         mask = gt['num_relation']
-        pred, gt = self.make_tensor(pred, gt, mask)        
+        
+        if self.config['model_name'] == 'vsgnet':
+            pred, gt = self.make_tensor_vsgnet(pred, gt, mask)
+        else:
+            pred, gt = self.make_tensor(pred, gt, mask)
 
         # Calculating mAP metrics
         result[self.mode + 'mAP_lr'] = self.metrics[self.mode + 'mAP_lr'](pred['lr'],gt['lr'])
@@ -146,17 +190,12 @@ class metric_tracker:
         for i, k in enumerate(self.mr_relations):
             result[self.mode + k + '_AP'] = AP_mr[i]
 
-
         AP_lr = self.metrics[self.mode + 'AP_lr'](pred['lr'],gt['lr'])
+        
         for i, k in enumerate(self.lr_relations):
             result[self.mode + k + '_AP'] = AP_lr[i]
 
-        # Calculating cm metrics
-        # result_cm = {}
-
-        # self.last_result_cm = result_cm
-
-        return result#, result_cm
+        return result
     
     def aggregate_metrics(self):
         result = {}
@@ -185,7 +224,8 @@ class metric_tracker:
             result[self.mode + k + '_AP'] = AP_lr[i]
 
 
-        return result#, self.last_result_cm
+        return result
+
 
     def reset_metrics(self):
 
@@ -198,6 +238,8 @@ class metric_tracker:
         self.metrics[self.mode + 'AP_cr'].reset()
 
         self.last_result_cm = {}
+
+
 
 
 

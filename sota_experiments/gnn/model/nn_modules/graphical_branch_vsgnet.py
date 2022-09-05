@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from gnn import GNN
+from model.nn_modules.gnn import GNN
 from utils.utils import aggregate
 
 class GraphicalBranch_vsgnet(torch.nn.Module):
@@ -16,7 +16,7 @@ class GraphicalBranch_vsgnet(torch.nn.Module):
             temp_edge_index = self.generate_fc_edge_index(num)
             self.edge_indices[num] = temp_edge_index
         
-        self.graph_dimensions = self.config['gcn_dimensions']
+        self.graph_dimensions = self.config['gnn_dimensions']
         self.gnn = GNN(config)
         
     
@@ -26,15 +26,16 @@ class GraphicalBranch_vsgnet(torch.nn.Module):
         '''
 
         num_edges = num_obj**2
-        temp_edge_index = torch.tensor(
-                                        [2, num_edges], 
-                                        dtype=torch.LongTensor,
+        temp_edge_index = -1 * torch.ones(
+                                        (2, num_edges), 
+                                        dtype=torch.long,
                                         device=self.config['device']
                                         )
         curr_ind = 0
         
         for t1 in range(num_obj):
             for t2 in range(num_obj):
+
                 temp_edge_index[0, curr_ind] = t1
                 temp_edge_index[1, curr_ind] = t2
                 curr_ind+=1
@@ -62,8 +63,7 @@ class GraphicalBranch_vsgnet(torch.nn.Module):
 
         for curr_batch in range(batch_size):
             
-            temp_num_obj = num_obj[curr_batch]
-            obj_ind_offset = obj_ind_offset + temp_num_obj
+            temp_num_obj = int(num_obj[curr_batch])
             temp_edge_index = self.edge_indices[temp_num_obj].clone() + obj_ind_offset
             edge_indices.append(temp_edge_index)
             
@@ -72,12 +72,14 @@ class GraphicalBranch_vsgnet(torch.nn.Module):
             
             temp_edge_slicing = [curr_batch] * (temp_num_obj ** 2)
             edge_slicing = edge_slicing + temp_edge_slicing
-        
+
+            obj_ind_offset = obj_ind_offset + temp_num_obj
+
         slicing_dict = {'node': node_slicing, 'edge': edge_slicing}
         combined_edge_index = torch.cat(edge_indices, dim=1)
-        
+
         # Perform graphical convolution using pytorch geometric
         self.graphical_obj_features = self.gnn(object_branch_output, combined_edge_index)
-        
+
         # output is the convolved embedding of each node
         return self.graphical_obj_features, slicing_dict

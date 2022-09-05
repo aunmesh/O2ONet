@@ -192,7 +192,7 @@ def masked_loss_vsgnet(predictions, target, criterions):
     loss['loss_mr'] = 0
     loss['loss_lr'] = 0
 
-    keys = ['cr', 'lr', 'mr']
+    keys = [ 'lr', 'mr', 'cr']
     # norm_vals = {'cr' : 1, 'lr': 5, 'mr': 14}        
 
     b_size = target['lr'].shape[0]
@@ -209,7 +209,9 @@ def masked_loss_vsgnet(predictions, target, criterions):
             if k == 'cr':
                 temp_predictions = predictions[k][lower_index:upper_index, :]
                 temp_predictions = torch.log(temp_predictions + 1e-20)
+                continue
 
+            temp_predictions = predictions[k][lower_index:upper_index, :]
             temp_targets = target[k][b, :curr_num_rel, :]
             temp_loss = criterions[k](temp_predictions, temp_targets)
             loss['loss_' + k]+=temp_loss

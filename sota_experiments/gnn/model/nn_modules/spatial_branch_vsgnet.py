@@ -43,7 +43,7 @@ class SpatialBranch_vsgnet(torch.nn.Module):
         '''
         generates the bounding box region
         '''
-        tot_num_rels = torch.sum(num_rels)
+        tot_num_rels = int(torch.sum(num_rels))
         input_sp_map = torch.zeros(tot_num_rels, 2, 64, 64, device=self.config['device'])
         batch_size = bboxes.shape[0]
         
@@ -51,25 +51,26 @@ class SpatialBranch_vsgnet(torch.nn.Module):
 
         for curr_batch in range(batch_size):
             
-            curr_num_rels = num_rels[curr_batch]
+            curr_num_rels = int(num_rels[curr_batch])
 
             for j in range(curr_num_rels):
-                
+
                 obj_ind_0, obj_ind_1 = obj_pairs[curr_batch, j]
-                
+                obj_ind_0, obj_ind_1 = int(obj_ind_0), int(obj_ind_1)
+
                 bbox_0 = bboxes[curr_batch, obj_ind_0]
                 bbox_1 = bboxes[curr_batch, obj_ind_1]
                 
                 bbox_0_scaled = self.scale_bbox(bbox_0, image_dimension, [64, 64])
                 bbox_1_scaled = self.scale_bbox(bbox_1, image_dimension, [64, 64])                
                 
-                temp_x0, temp_x1 = bbox_0_scaled[1], bbox_0_scaled[3]
-                temp_y0, temp_y1 = bbox_0_scaled[0], bbox_0_scaled[2]
+                temp_x0, temp_x1 = int(bbox_0_scaled[1]), int(bbox_0_scaled[3])
+                temp_y0, temp_y1 = int(bbox_0_scaled[0]), int(bbox_0_scaled[2])
                  
                 input_sp_map[curr_relation_index, 0, temp_x0:temp_x1, temp_y0:temp_y1] = 1
                 
-                temp_x0, temp_x1 = bbox_1_scaled[1], bbox_1_scaled[3]
-                temp_y0, temp_y1 = bbox_1_scaled[0], bbox_1_scaled[2]
+                temp_x0, temp_x1 = int(bbox_1_scaled[1]), int(bbox_1_scaled[3])
+                temp_y0, temp_y1 = int(bbox_1_scaled[0]), int(bbox_1_scaled[2])
                  
                 input_sp_map[curr_relation_index, 1, temp_x0:temp_x1, temp_y0:temp_y1] = 1
                 
@@ -85,8 +86,8 @@ class SpatialBranch_vsgnet(torch.nn.Module):
         num_rels = data_item['num_relation']
         
         # Get the output from subbranch for all the objects
-        frame_width = data_item['metadata']['frame_width']
-        frame_height = data_item['metadata']['frame_height']
+        frame_width = data_item['metadata']['frame_width'][0]
+        frame_height = data_item['metadata']['frame_height'][0]
         image_dimension = [frame_width, frame_height]
 
         
