@@ -8,8 +8,6 @@ from model.nn_modules.graphical_branch_drg import GraphicalBranch_drg
 from model.nn_modules.spatial_branch_drg import SpatialBranch_drg
 from model.nn_modules.object_branch_drg import ObjectBranch_drg
 
-from utils.utils import aggregate
-
 class DRG(torch.nn.Module):
 
     def __init__(self, config):
@@ -29,10 +27,10 @@ class DRG(torch.nn.Module):
         for k in self.relation_keys:
 
             temp_dimension = self.config['graphical_branch_' + k + '_classifier_dimension']
-            self.refined_branch_classifiers[k] = self.make_classifier(temp_dimension, k)
+            self.graphical_branch_classifiers[k] = self.make_classifier(temp_dimension, k)
             
             temp_dimension = self.config['object_branch_' + k + '_classifier_dimension']
-            self.spatial_branch_classifiers[k] = self.make_classifier(temp_dimension, k)
+            self.object_branch_classifiers[k] = self.make_classifier(temp_dimension, k)
 
 
 
@@ -85,8 +83,13 @@ class DRG(torch.nn.Module):
             res_object[k] = self.object_branch_classifiers[k](object_branch_output_paired)
 
         
-        result = {}
+        res_combined = {}
         for k in self.relation_keys:
-            result[k] = res_object[k] * res_graphical[k]
+            res_combined[k] = res_object[k] * res_graphical[k]
         
-        return result
+        res_all_stream = {}
+        res_all_stream['graphical'] = res_graphical
+        res_all_stream['object'] = res_object
+        res_all_stream['combined'] = res_combined
+        
+        return res_all_stream

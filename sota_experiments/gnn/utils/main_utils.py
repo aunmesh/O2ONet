@@ -5,6 +5,7 @@ import os
 from dataloader.dataset import dataset
 from dataloader.vsgnet_dataset import vsgnet_dataset
 from model.nn_nets.vsgnet import vsgnet
+from model.nn_nets.drg import DRG
 
 import torch.nn as nn
 
@@ -31,11 +32,15 @@ def construct_criterions(config):
 
 def get_model(config):
 
+    if config['model_name'] == 'drg':
+
+        model = DRG(config).to(config['device'])
+        return model
+
     if config['model_name'] == 'vsgnet':
 
         model = vsgnet(config).to(config['device'])
         return model
-
 
     if config['model_name'] == 'ooi_net':
 

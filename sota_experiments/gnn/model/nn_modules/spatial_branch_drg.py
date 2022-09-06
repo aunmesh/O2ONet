@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-from utils.utils import aggregate
 from utils.drg_utils import *
 
 class SpatialBranch_drg(torch.nn.Module):
@@ -45,28 +44,27 @@ class SpatialBranch_drg(torch.nn.Module):
         '''
         
         batch_size = bboxes.shape[0]
-        tot_num_combinations = 0  # int(torch.sum(num_rels))
+        tot_num_combinations = 0
         all_combinations = []
         
         for b in range(batch_size):
-            curr_num_obj = num_obj[b]
-            curr_num_combinations = ( curr_num_obj * (curr_num_obj-1) )/2.0
+            curr_num_obj = int(num_obj[b])
+            curr_num_combinations = int(( curr_num_obj * (curr_num_obj-1) )/2.0)
             tot_num_combinations+=curr_num_combinations
             all_combinations.append(curr_num_combinations)
-
-        slicing_tensor = torch.zeros(tot_num_combinations, 3, device=self.config['device'])
-        input_sp_map = torch.zeros(tot_num_combinations, 2, 64, 64, device=self.config['device'])
+        
+       
+        slicing_tensor = torch.zeros((tot_num_combinations, 3), device=self.config['device'])
+        input_sp_map = torch.zeros((tot_num_combinations, 2, 64, 64), device=self.config['device'])
         curr_index = 0
 
         for curr_batch in range(batch_size):
             
-            curr_num_obj = num_obj[b]
-            curr_num_combinations = ( curr_num_obj * (curr_num_obj-1) )/2.0
-            tot_num_combinations+=curr_num_combinations
-            all_combinations.append(curr_num_combinations)
+            curr_num_obj = int(num_obj[curr_batch])
+            curr_num_combinations = int((curr_num_obj * (curr_num_obj-1) )/2.0)
 
             for i in range(curr_num_obj):
-                for j in range(i, curr_num_obj):
+                for j in range(i+1, curr_num_obj):
 
                     bbox_0 = bboxes[curr_batch, i]
                     bbox_1 = bboxes[curr_batch, j]
@@ -87,20 +85,10 @@ class SpatialBranch_drg(torch.nn.Module):
     def forward(self, data_item):
         
         bboxes = data_item['bboxes']
-        obj_pairs = data_item['object_pairs']
-        num_rels = data_item['num_relation']
-        
-        # Get the output from subbranch for all the objects
-        frame_width = data_item['metadata']['frame_width'][0]
-        frame_height = data_item['metadata']['frame_height'][0]
-        image_dimension = [frame_width, frame_height]
-
+        num_obj = data_item['num_obj']        
         
         # prepare input to spatial conv
-        input_sp_map, slicing_tensor = self.prepare_input_spatial_conv(
-                                                        bboxes, obj_pairs, 
-                                                        num_rels, image_dimension
-                                                       )
+        input_sp_map, slicing_tensor = self.prepare_input_spatial_conv( bboxes, num_obj)
 
         # pass it through the conv
         spatial_feature_map = self.conv_sp_map(input_sp_map)

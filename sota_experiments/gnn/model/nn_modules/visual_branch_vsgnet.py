@@ -85,7 +85,9 @@ class VisualBranch_vsgnet(torch.nn.Module):
                                                     image_dimension
                                                  )
 
-        context_branch_output = self.context_branch(frame_feature_map)
+        context_branch_output_key, context_branch_output_val = self.context_branch(
+                                                                            frame_feature_map
+                                                                            )
         
         # collect all the relevant object pairs into one large tensor for further processing
 

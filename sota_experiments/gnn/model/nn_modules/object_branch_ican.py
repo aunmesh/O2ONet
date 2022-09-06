@@ -55,50 +55,11 @@ class ObjectBranch_drg(torch.nn.Module):
         
         return bboxes_scaled
     
-    def pair_features(
-                    self, num_rels, object_branch_output, 
-                    num_obj, obj_pairs
-                    ):
-
-        object_branch_output_dim = object_branch_output.shape[-1]
-        tot_num_rels = int(torch.sum(num_rels))
-
-        paired_features = torch.zeros((
-                                    tot_num_rels, 
-                                    object_branch_output_dim
-                                    ),device = self.config['device'])
-
-        batch_size = num_rels.shape[0]
-
-        for curr_batch in range(batch_size):
-            
-            curr_num_rels = int(num_rels[curr_batch])
-            object_index_offset = int( torch.sum(num_obj[:curr_batch]) )
-            relation_index_offset = int( torch.sum(num_rels[:curr_batch]) )
-            
-            for j in range(curr_num_rels):
-
-                obj_ind_0, obj_ind_1 = obj_pairs[curr_batch, j]
-
-                obj_vec_0 = object_branch_output[ int(obj_ind_0.item()) + object_index_offset ]
-                obj_vec_1 = object_branch_output[ int(obj_ind_1.item()) + object_index_offset ]
-
-                temp_obj_vector = aggregate(obj_vec_0, obj_vec_1, 'mean')
-                
-                temp_relation_index = int(relation_index_offset + j)
-                
-                paired_features[temp_relation_index, :] = temp_obj_vector
-                
-        return paired_features
-
-
     def forward(self, data_item):
 
         frame_feature_map = data_item['frame_deep_features']
         bboxes = data_item['bboxes']
         num_obj = data_item['num_obj']
-        obj_pairs = data_item['object_pairs']
-        num_rels = data_item['num_relation']
         
         # Get the output from subbranch for all the objects
         frame_width = data_item['metadata']['frame_width'][0]
@@ -112,10 +73,20 @@ class ObjectBranch_drg(torch.nn.Module):
         bboxes_list = torch.split(bboxes_scaled, 1, dim=0)
         bboxes_list = [b.squeeze(0) for b in bboxes_list]
         
+        tot_num_obj = torch.sum(num_obj)
+        slicing_tensor = torch.zeros((tot_num_obj), device=self.config['device'])
+        lower_index = 0
+        upper_index = 0
+        
         # removing unnecessary objects is important to reduce computation downstream
         for i, b in enumerate(bboxes_list):
+
             temp_num_obj = int(num_obj[i])
             bboxes_list[i] = b[:temp_num_obj]
+            
+            upper_index += temp_num_obj
+            slicing_tensor[lower_index:upper_index] = i
+            lower_index = upper_index
         
         roi_pool_objects = self.pooler(frame_feature_map, bboxes_list)
 
@@ -129,10 +100,5 @@ class ObjectBranch_drg(torch.nn.Module):
         # flattening the output
         res_objects_flattened = res_objects_pooled.view(res_objects_pooled.size()[0], -1)
         
-        # pairing the individual object features using an aggregation operation
-        res_objects_paired = self.pair_features( num_rels, 
-                                                 res_objects_flattened,
-                                                 num_obj, obj_pairs
-                                                )
 
-        return res_objects_paired
+        return res_objects_flattened, slicing_tensor

@@ -18,6 +18,9 @@ def get_loss(output, target, criterions, config=None):
     if config['loss_calculation'] == 'masked loss vsgnet':
         return masked_loss_vsgnet(output, target, criterions)
 
+    if config['loss_calculation'] == 'masked loss drg':
+        return masked_loss_drg(output, target, criterions, config)
+
 
 def get_gnn(config, in_dim, out_dim):
     
@@ -182,15 +185,16 @@ def pool_edge_features(edge_feature_mat, edge_index):
 def process_data_for_fpass(data_item, config):
    
    # obj_features, obj_pairs, slicing dictionary
-    if config['model_name'] == 'vsgnet':
+    if config['model_name'] == 'vsgnet' or config['model_name'] == 'drg':
 
         tensor_keys = ['num_obj', 'bboxes', 'lr', 'mr', 'cr', 'object_pairs']
         tensor_keys+= ['num_relation', 'frame_deep_features']
 
-        for k in tensor_keys:
-            data_item[k] = data_item[k].float().to(config['device'])
         data_item['frame_deep_features'] = data_item['frame_deep_features'][:,5,:,:,:]
         data_item['bboxes'] = data_item['bboxes'][:,:,5,:]
+
+        for k in tensor_keys:
+            data_item[k] = data_item[k].to(config['device']).float()
         
         return data_item
    

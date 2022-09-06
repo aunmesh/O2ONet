@@ -36,11 +36,10 @@ class metric_tracker:
         self.metrics = {}
         
         self.relation_keys = ['mr', 'lr', 'cr']
-
-        self.metrics[self.mode + 'mAP_lr'] = tm.AveragePrecision(num_classes=self.lr_classes, average='macro').to(device)
+            
+        self.metrics[self.mode +'mAP_lr' ] = tm.AveragePrecision(num_classes=self.lr_classes, average='macro').to(device)
         self.metrics[self.mode + 'mAP_mr'] = tm.AveragePrecision(num_classes=self.mr_classes, average='macro').to(device)
         self.metrics[self.mode + 'mAP_cr'] = tm.AveragePrecision(num_classes=self.cr_classes, average='macro').to(device)
-
 
         self.metrics[self.mode + 'AP_lr'] = tm.AveragePrecision(num_classes=self.lr_classes, average=None).to(device)
         self.metrics[self.mode + 'AP_mr'] = tm.AveragePrecision(num_classes=self.mr_classes, average=None).to(device)
@@ -81,8 +80,6 @@ class metric_tracker:
         return out_pred, out_gt
 
 
-
-
     # Accumulates all the tensors using mask in one matrix
     def make_tensor_vsgnet(self, predictions, gt, mask):
         '''
@@ -117,8 +114,6 @@ class metric_tracker:
             out_gt[k] = torch.cat(out_gt[k], 0)
 
         return predictions, out_gt
-
-
 
 
     # Accumulates all the tensors using mask in one matrix
@@ -328,3 +323,197 @@ class metric_tracker_non_ooi:
         
         for k in self.metrics.keys():
             self.metrics[k].reset()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class metric_tracker_multi_stream:
+
+    def __init__(self, config, mode='train'):
+
+        '''
+        # Make Metric Objects
+        # Needed metrics:
+
+        average precision
+        mAP
+        confusion matrix 
+        '''
+
+        self.config = config
+        device = self.config['device']
+
+        self.relations = {}
+        self.relations['cr'] = ['Contact', 'No Contact', 'None of these']
+
+        self.relations['lr'] = ['Below/Above', 'Behind/Front', 'Left/Right', 'Inside', 'None of these']
+
+        self.relations['mr'] = ['Holding', 'Carrying', 'Adjusting', 'Rubbing', 'Sliding', 'Rotating',
+                       'Twisting', 'Raising', 'Lowering', 'Penetrating', 'Moving Toward', 
+                       'Moving Away', 'Negligible Relative Motion', 'None of these']
+
+        self.mode = mode + '_'
+
+        self.metrics = {}
+        
+        self.relation_keys = ['mr', 'lr', 'cr']
+
+        self.streams = self.config['streams']
+        
+        for stream in self.streams:
+            for key in self.relation_keys:
+
+                if stream != '':
+                    stream_string = stream + '_'
+                else:
+                    stream_string = ''
+                
+                temp_mAP_key = self.mode + stream_string + 'mAP_' + key
+                temp_AP_key = self.mode + stream_string + 'AP_' + key
+                
+                num_rel = len(self.relations[key])
+                
+                self.metrics[temp_mAP_key] = tm.AveragePrecision(num_rel, average='macro').to(device)
+                self.metrics[temp_AP_key] = tm.AveragePrecision(num_rel, average=None).to(device)
+
+
+    # Accumulates all the tensors using mask in one matrix
+    def make_tensor(self, predictions, gt, mask):
+        '''
+        This function makes a combined tensor for ground truth and predictions using the mask
+
+            pred: pred is a dictionary of predictions
+            gt  : gt is dictionary of ground truth labels
+            mask: mask is the places which should be considered 
+        '''
+        
+        out_gt = {}
+
+        for k in self.relation_keys:
+            out_gt[k] = []
+
+        # num_relations in different batch elements
+        batch_size = mask.shape[0]
+
+        
+        for b in range(batch_size):
+
+            temp_num_relation = int(mask[b])
+
+            for k in self.relation_keys:
+                out_gt[k].append( gt[k][b,:temp_num_relation,:] )
+
+        for k in self.relation_keys:
+            out_gt[k] = torch.cat(out_gt[k], 0)
+
+        return predictions, out_gt
+
+
+    def calc_metrics(self, pred, gt):
+
+        result = {}
+        mask = gt['num_relation']
+        
+        pred, gt = self.make_tensor(pred, gt, mask)
+        
+        # calculating mAP metrics
+        
+        for stream in self.streams:
+
+            if stream != '':
+                stream_string = stream + '_'
+            else:
+                stream_string = ''
+
+            stream_all_mAP_result_key = self.mode + stream_string + 'mAP_all'
+            result[ stream_all_mAP_result_key ] = 0
+
+            for key in self.relation_keys:
+                # Calculating mAP metrics
+                temp_mAP_key = self.mode + stream_string + 'mAP_' + key
+                result[temp_mAP_key] = self.metrics[temp_mAP_key]( pred[stream][key], gt[key] )
+                result[ stream_all_mAP_result_key ] += result[temp_mAP_key]
+                
+                # Calculating AP metrics
+                temp_AP_key = self.mode + stream_string + 'AP_' + key
+
+                temp_AP = self.metrics[temp_AP_key](pred[stream][key], gt[key])
+                relations_list = self.relations[key]
+                
+                for i, rel in enumerate(relations_list):
+                    rel_key = self.mode + stream_string + 'AP_' + rel
+                    result[rel_key] = temp_AP[i]
+
+            result[ stream_all_mAP_result_key ]/=3.0
+
+        return result
+    
+    def aggregate_metrics(self):
+
+        result = {}
+
+        for stream in self.streams:
+
+            if stream != '':
+                stream_string = stream + '_'
+            else:
+                stream_string = ''
+
+            stream_all_mAP_result_key = self.mode + stream_string + 'mAP_all'
+            result[ stream_all_mAP_result_key ] = 0
+
+            for key in self.relation_keys:
+
+                # Calculating mAP metrics
+                temp_mAP_key = self.mode + stream_string + 'mAP_' + key
+                result[temp_mAP_key] = self.metrics[temp_mAP_key].compute()
+                result[ stream_all_mAP_result_key ] += result[temp_mAP_key]
+                
+                # Calculating AP metrics
+                temp_AP_key = self.mode + stream_string + 'AP_' + key
+
+                temp_AP = self.metrics[temp_AP_key].compute()
+                relations_list = self.relations[key]
+                
+                for i, rel in enumerate(relations_list):
+                    rel_key = self.mode + stream_string + 'AP_' + rel
+                    result[rel_key] = temp_AP[i]
+
+            result[ stream_all_mAP_result_key ]/=3.0
+
+        return result
+
+
+    def reset_metrics(self):
+
+        for stream in self.streams:
+
+            if stream != '':
+                stream_string = stream + '_'
+            else:
+                stream_string = ''
+
+            for key in self.relation_keys:
+
+                # Calculating mAP metrics
+                temp_mAP_key = self.mode + stream_string + 'mAP_' + key
+                self.metrics[temp_mAP_key].reset()
+                
+                # Calculating AP metrics
+                temp_AP_key = self.mode + stream_string + 'AP_' + key
+
+                self.metrics[temp_AP_key].reset()
+
+        self.last_result_cm = {}
+

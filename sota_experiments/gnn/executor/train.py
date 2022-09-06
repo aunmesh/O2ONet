@@ -65,6 +65,7 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
         end4 = time.time()
         
         print("TIMES" , end4-start2, end3-start2, end2-start2, end1-start2)
+        break
 
     ### Aggregating metrics across all iterations
     metric_dict = metric_tracker.aggregate_metrics()

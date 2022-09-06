@@ -3,9 +3,10 @@ import torch
 
 def bbox_trans(object_box_1_ori, object_box_2_ori, ratio, size = 64):
 
-    object_box_1  = object_box_1_ori.copy()
-    object_box_2 = object_box_2_ori.copy()
-    
+
+    object_box_1  = object_box_1_ori.clone()
+    object_box_2 = object_box_2_ori.clone()
+    device=object_box_1.device    
     
     InteractionPattern = [min(object_box_1[0], object_box_2[0]), 
                           min(object_box_1[1], object_box_2[1]), 
@@ -59,8 +60,9 @@ def bbox_trans(object_box_1_ori, object_box_2_ori, ratio, size = 64):
 
 
         shift = size / 2 - (InteractionPattern[2] + 1) / 2 
-        object_box_1 += [shift, 0 , shift, 0]
-        object_box_2 += [shift, 0 , shift, 0]
+
+        object_box_1 += torch.tensor([shift, 0 , shift, 0], device=device)
+        object_box_2 += torch.tensor([shift, 0 , shift, 0], device=device)
      
     else: # width is larger than height
 
@@ -92,15 +94,16 @@ def bbox_trans(object_box_1_ori, object_box_2_ori, ratio, size = 64):
 
         shift = size / 2 - (InteractionPattern[3] + 1) / 2 
         
-        object_box_1 = object_box_1 + [0, shift, 0 , shift]
-        object_box_2 = object_box_2 + [0, shift, 0 , shift]
+        object_box_1 = object_box_1 + torch.tensor([0, shift, 0 , shift], device=device)
+        object_box_2 = object_box_2 + torch.tensor([0, shift, 0 , shift], device=device)
  
     return torch.round(object_box_1), torch.round(object_box_2)
 
 
 def get_sp(object_box_1, object_box_2, device):
     
-    InteractionPattern = [min(object_box_1[0], object_box_2[0]), min(object_box_1[1], object_box_2[1]), max(human_box[2], object_box[2]), max(human_box[3], object_box[3])]
+    InteractionPattern = [min(object_box_1[0], object_box_2[0]), min(object_box_1[1], object_box_2[1]), 
+                          max(object_box_1[2], object_box_2[2]), max(object_box_1[3], object_box_2[3])]
     height = InteractionPattern[3] - InteractionPattern[1] + 1
     width = InteractionPattern[2] - InteractionPattern[0] + 1
     if height > width:

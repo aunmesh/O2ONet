@@ -46,7 +46,7 @@ class GraphicalBranch_drg(torch.nn.Module):
                         slicing_tensor, object_pairs, 
                         num_rel):
         
-        total_rels = torch.sum(num_rel)
+        total_rels = int(torch.sum(num_rel))
         dim_fmap = graphical_branch_output.shape[-1]
         filtered_tensors = torch.zeros( (total_rels, dim_fmap),
                                       device = self.config['device'])
@@ -55,7 +55,7 @@ class GraphicalBranch_drg(torch.nn.Module):
         curr_ind = 0
         
         for b in range(batch_size):
-            temp_num_rel = num_rel[b]
+            temp_num_rel = int(num_rel[b])
         
             for i in range(temp_num_rel):
                 obj_ind_0, obj_ind_1 = object_pairs[b, i]
@@ -70,7 +70,8 @@ class GraphicalBranch_drg(torch.nn.Module):
                 temp_2 = (slicing_tensor[:,2] == obj_ind_max)
                 
                 temp = temp_0 * temp_1 * temp_2
-                req_ind = int(torch.where(temp))
+                temp_loc = torch.where(temp)[0]
+                req_ind = int(temp_loc)
                 
                 filtered_tensors[curr_ind, :] = graphical_branch_output[req_ind, :]
                 curr_ind+=1
@@ -113,7 +114,7 @@ class GraphicalBranch_drg(torch.nn.Module):
                                             combined_edge_index
                                          )
         
-        obj_pairs = data_item['obj_pairs']
+        obj_pairs = data_item['object_pairs']
         num_rel = data_item['num_relation']
         filtered_tensor = self.filter_tensor_for_classifier(graphical_obj_features,
                                                             slicing_tensor, obj_pairs,

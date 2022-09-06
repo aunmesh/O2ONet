@@ -13,7 +13,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import torch
 from log_results import wandb_logger
-from metrics.metrics import metric_tracker
+from metrics.metrics import metric_tracker_multi_stream
 from utils.main_utils import *
 
 def main(args):
@@ -52,9 +52,9 @@ def main(args):
         config = logger.config
 
     ### Creating metric tracker objects
-    train_metric_tracker = metric_tracker(config, mode='train')
-    val_metric_tracker = metric_tracker(config, mode='val')
-    test_metric_tracker = metric_tracker(config, mode='test')
+    train_metric_tracker = metric_tracker_multi_stream(config, mode='train')
+    val_metric_tracker = metric_tracker_multi_stream(config, mode='val')
+    test_metric_tracker = metric_tracker_multi_stream(config, mode='test')
     
     ### Training 
     if args.train:
