@@ -6,6 +6,7 @@ from dataloader.dataset import dataset
 from dataloader.vsgnet_dataset import vsgnet_dataset
 from model.nn_nets.vsgnet import vsgnet
 from model.nn_nets.drg import DRG
+from model.nn_nets.ican import iCAN
 
 import torch.nn as nn
 
@@ -31,6 +32,11 @@ def construct_criterions(config):
         
 
 def get_model(config):
+
+    if config['model_name'] == 'ican':
+
+        model = iCAN(config).to(config['device'])
+        return model
 
     if config['model_name'] == 'drg':
 

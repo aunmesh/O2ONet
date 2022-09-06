@@ -93,9 +93,15 @@ def main(args):
             
             ### Save the model and log results
             is_best = False
-            if best_mAP < val_result['val_mAP_all']:
-                best_mAP = val_result['val_mAP_all']
-                is_best = True
+            if 'streams' in config.keys():
+                if best_mAP < val_result['val_combined_mAP_all']:
+                    best_mAP = val_result['val_combined_mAP_all']
+                    is_best = True
+
+            else:
+                if best_mAP < val_result['val_mAP_all']:
+                    best_mAP = val_result['val_mAP_all']
+                    is_best = True
 
             ### Saving the best model if it is there
             save_state(model, optimizer, e, config, is_best)  # ADD FUNCTIONALITY FOR SAVING BEST MODEL

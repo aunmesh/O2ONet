@@ -24,20 +24,7 @@ class SpatialBranch_drg(torch.nn.Module):
                     nn.ReLU(),
                     )
 	
-    def scale_bbox(self, box, image_dimension, req_dim):
 
-        scale_factor = [ req_dim[i]/image_dimension[i] for i in range(len(image_dimension)) ]
-        
-        scaled_box = box.clone()
-        
-        scaled_box[0]*=scale_factor[0]
-        scaled_box[2]*=scale_factor[0]
-
-        scaled_box[1]*=scale_factor[1]
-        scaled_box[3]*=scale_factor[1]
-        
-        return scaled_box
-        
     def prepare_input_spatial_conv(self, bboxes, num_obj):
         '''
         generates the bounding box region

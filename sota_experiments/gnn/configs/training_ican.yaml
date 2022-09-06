@@ -10,12 +10,11 @@ optimizer: 'Adam'
 # After how many epochs to save the model
 save_epoch: 1
 
-model_name: 'drg'
-GNN: 'GATv2Conv'
+model_name: 'ican'
 
 overfit: False
 
-model_saving_path: '/workspace/work/results_ICRA_drg/'
+model_saving_path: '/workspace/work/results_ICRA_ican/'
 
 aggregator : 'mean'
 
@@ -31,18 +30,18 @@ device: 'cuda:3'
 
 gif_size: 11
 
-loss_calculation: 'masked loss drg'
+loss_calculation: 'masked loss ican'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ooi_icra_drg'
+wandb_project_name: 'ooi_icra_ican'
 wandb_entity: 'aunmesh'
 
 log_results: False
 
-streams: ['object', 'graphical', 'combined']
+streams: ['visual', 'spatial', 'combined']
 
-roi_pool_size: [10, 10]
+roi_pool_size: [7, 7]
 spatial_scale: 1
 sampling_ratio: 1
 
@@ -51,12 +50,12 @@ sampling_ratio: 1
 gnn_dimensions : [512, 512]
 lin_obj_dim : [1024, 1024]
 
-graphical_branch_cr_classifier_dimension : [512, 3]
-graphical_branch_lr_classifier_dimension : [512, 5]
-graphical_branch_mr_classifier_dimension : [512, 14]
+spatial_branch_cr_classifier_dimension : [512, 3]
+spatial_branch_lr_classifier_dimension : [512, 5]
+spatial_branch_mr_classifier_dimension : [512, 14]
 
-object_branch_cr_classifier_dimension : [1024, 3]
-object_branch_lr_classifier_dimension : [1024, 5]
-object_branch_mr_classifier_dimension : [1024, 14]
+visual_branch_cr_classifier_dimension : [1024, 3]
+visual_branch_lr_classifier_dimension : [1024, 5]
+visual_branch_mr_classifier_dimension : [1024, 14]
 
 gnn_dropout : 0.15

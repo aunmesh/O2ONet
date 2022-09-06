@@ -297,6 +297,72 @@ def masked_loss_drg(predictions, target, criterions, config):
 
 
 
+
+def masked_loss_ican(predictions, target, criterions, config):
+
+    '''
+    predictions : list of dimension [b_size, max_num_obj_pairs, num_classes]
+    target      : list of dimension [b_size, max_num_obj_pairs, num_classes]
+                  they correspond with the predictions
+    mask        : A mask of dimension [b_size, max_num_obj_pairs]
+    '''
+
+    mask = target['num_relation']
+
+    # criterions = {}
+    # criterions['cr'] = F.cross_entropy
+    # criterions['lr'] = F.binary_cross_entropy_with_logits
+    # criterions['mr'] = F.binary_cross_entropy_with_logits
+
+    loss = {}
+    loss['loss_total'] = 0
+    loss['loss_cr'] = 0
+    loss['loss_mr'] = 0
+    loss['loss_lr'] = 0
+
+    keys = [ 'lr', 'mr', 'cr']
+    streams = config['streams']
+
+    b_size = target['lr'].shape[0]
+    
+    lower_index = 0
+    upper_index = 0
+
+    for b in range(b_size):
+        curr_num_rel = int(mask[b])
+        upper_index += curr_num_rel
+        
+        for k in keys:
+            
+            if k == 'cr':
+                for stream in streams:
+                    temp_predictions = predictions[stream][k][lower_index:upper_index, :]
+                    temp_predictions = torch.log(temp_predictions + 1e-20)
+                    temp_targets = target[k][b, :curr_num_rel, :]
+                    temp_loss = criterions[k](temp_predictions, temp_targets)
+                    loss['loss_' + stream + '_stream_' + k] = temp_loss
+                continue
+            
+            for stream in streams:
+                temp_predictions = predictions[stream][k][lower_index:upper_index, :]
+                temp_targets = target[k][b, :curr_num_rel, :]
+                temp_loss = criterions[k](temp_predictions, temp_targets)
+                loss['loss_' + stream + '_stream_' + k] = temp_loss
+
+        lower_index = upper_index
+    
+    # adding all losses together
+    for k in keys:
+        for stream in streams:
+            loss['loss_total'] += loss['loss_' + stream + '_stream_' + k]
+
+    loss['loss_total']/=( 1.0 * len(keys))
+
+    return loss
+
+
+
+
 def segmentation_loss(input, target, mask):
     """
     description:

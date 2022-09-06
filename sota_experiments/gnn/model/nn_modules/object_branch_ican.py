@@ -3,11 +3,11 @@ import torch.nn as nn
 import torchvision
 from utils.utils import aggregate
 
-class ObjectBranch_drg(torch.nn.Module):
+class ObjectBranch_ican(torch.nn.Module):
 
     def __init__(self, config):
 
-        super(ObjectBranch_drg, self).__init__()
+        super(ObjectBranch_ican, self).__init__()
         self.config = config
 
         self.lin_object_layers = []
@@ -24,7 +24,7 @@ class ObjectBranch_drg(torch.nn.Module):
 
         self.lin_obj_net = nn.Sequential(*self.lin_object_layers).to(self.config['device'])
 
-        self.pool_size = tuple(self.config['roi_pool_size'])
+        self.pool_size = (7,7)
         self.spatial_scale = self.config['spatial_scale']
         self.sampling_ratio = self.config['sampling_ratio']
 
@@ -54,12 +54,16 @@ class ObjectBranch_drg(torch.nn.Module):
         bboxes_scaled[:,:,3] = bboxes[:,:,3] * height_scale
         
         return bboxes_scaled
+
+
     
     def forward(self, data_item):
 
         frame_feature_map = data_item['frame_deep_features']
         bboxes = data_item['bboxes']
         num_obj = data_item['num_obj']
+        obj_pairs = data_item['object_pairs']
+        num_rels = data_item['num_relation']
         
         # Get the output from subbranch for all the objects
         frame_width = data_item['metadata']['frame_width'][0]
@@ -69,11 +73,11 @@ class ObjectBranch_drg(torch.nn.Module):
         # getting the bboxes for the central frame
         bboxes_scaled = self.scale_bboxes(bboxes, frame_feature_map.shape, image_dimension)
 
-        # Get 10*10 roi pool of all the regions 
+        # Get 7*7 roi pool of all the regions 
         bboxes_list = torch.split(bboxes_scaled, 1, dim=0)
         bboxes_list = [b.squeeze(0) for b in bboxes_list]
         
-        tot_num_obj = torch.sum(num_obj)
+        tot_num_obj = int(torch.sum(num_obj))
         slicing_tensor = torch.zeros((tot_num_obj), device=self.config['device'])
         lower_index = 0
         upper_index = 0
@@ -92,6 +96,7 @@ class ObjectBranch_drg(torch.nn.Module):
 
         # swapping dimensions for linear layer
         roi_pool_objects = roi_pool_objects.permute(0, 2, 3, 1)
+
         ##Objects##
         res_objects = self.lin_obj_net(roi_pool_objects)
         res_objects = res_objects.permute(0, 3, 1, 2)

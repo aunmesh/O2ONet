@@ -22,8 +22,6 @@ class ContextBranch_ican(torch.nn.Module):
 				nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
 				nn.Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False),
 				nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
-				nn.Conv2d(512, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False),
-				nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
 				nn.ReLU(inplace=False),
 				)
 
