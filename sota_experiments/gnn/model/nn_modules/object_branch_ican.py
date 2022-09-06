@@ -37,6 +37,20 @@ class ObjectBranch_ican(torch.nn.Module):
         # Global average pooling
         self.obj_pool = nn.AvgPool2d(self.pool_size, padding=0, stride=(1,1)).to(self.config['device'])
 
+        self.residual_transform = nn.Sequential(
+                                                nn.Linear(1024, 2048),
+                                                nn.ReLU()
+                                                )
+
+        self.res5 = nn.Sequential(
+				nn.Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False),
+				nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+				nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding='same',bias=False),
+				nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+				nn.Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False),
+				nn.BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+				nn.ReLU(inplace=False)
+				                        ).to(self.config['device'])
 
     def scale_bboxes(self, bboxes, frame_feature_map_shape, image_dimension):
         
@@ -96,14 +110,22 @@ class ObjectBranch_ican(torch.nn.Module):
 
         # swapping dimensions for linear layer
         roi_pool_objects = roi_pool_objects.permute(0, 2, 3, 1)
+        roi_pool_residual = self.residual_transform(roi_pool_objects).permute(0,3,1,2)
+        
+        # reswapping for res5 conv layers
+        roi_pool_objects = roi_pool_objects.permute(0,3,1,2)
+        temp_res5 = self.res5(roi_pool_objects)
+        res5_objects =  temp_res5 + roi_pool_residual
+        
+        res5_objects_gap = self.obj_pool(res5_objects)
 
-        ##Objects##
-        res_objects = self.lin_obj_net(roi_pool_objects)
-        res_objects = res_objects.permute(0, 3, 1, 2)
-        res_objects_pooled = self.obj_pool(res_objects)
+        # ##Objects##
+        # res_objects = self.lin_obj_net(roi_pool_objects)
+        # res_objects = res_objects.permute(0, 3, 1, 2)
+        # res_objects_pooled = self.obj_pool(res_objects)
         
         # flattening the output
-        res_objects_flattened = res_objects_pooled.view(res_objects_pooled.size()[0], -1)
+        res5_objects_flattened = res5_objects_gap.view(res5_objects_gap.size()[0], -1)
         
 
-        return res_objects_flattened, slicing_tensor
+        return res5_objects_flattened, slicing_tensor
