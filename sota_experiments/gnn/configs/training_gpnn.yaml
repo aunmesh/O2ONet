@@ -1,10 +1,10 @@
 train_batch_size: 32
-val_batch_size: 206
-test_batch_size: 203
+val_batch_size: 32
+test_batch_size: 32
 
 num_epochs: 200
 lr: .001
-features_list: ['central_frame_geometric_feature', 'cnn_bbox_feature', 'i3d_feature', 'central_frame_motion_feature']
+features_list: ['cnn_bbox_feature', 'i3d_feature']
 
 optimizer: 'Adam'
 
@@ -31,10 +31,10 @@ mr_dropout : 0.15
 aggregator : 'mean'
 
 # field to distinguish from different datasets (depending on gif length)
-dataset_description: 'ooi_dataset'
+dataset_description: 'gpnn_dataset'
 
 # root folder of the dataset
-dataset_root: '/workspace/data/data_folder/o2o/all_features/gifs_11'
+dataset_root: '/workspace/data/data_folder/o2o/all_features/gpnn_with_edge'
 
 # relative location of the annotations file
 train_annotations: 'train.pkl'
@@ -55,11 +55,12 @@ comments: 'None'
 wandb_project_name: 'ooi_icra_gpnn'
 wandb_entity: 'aunmesh'
 
-log_results: True
+log_results: False
+streams: ['combined']
 
 # model args for gpnn
 'edge_feature_size': 220
-'node_feature_size': 1098
+'node_feature_size': 2048
 'message_size': 256
 'link_hidden_size': 256 
 'link_hidden_layers': 2

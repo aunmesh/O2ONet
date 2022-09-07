@@ -78,8 +78,7 @@ def main(args):
         best_mAP = -np.inf
         
         ### Training Loop
-        #for e in tqdm(range(start_epoch, end_epoch)):
-        for e in tqdm(range(0, 20)):
+        for e in tqdm(range(start_epoch, end_epoch)):
 
             ### Train for an epoch and get the result dictionary
             train_result = train(model, train_loader, optimizer, config, criterions, train_metric_tracker)

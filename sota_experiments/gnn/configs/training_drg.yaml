@@ -1,6 +1,6 @@
 train_batch_size: 32
-val_batch_size: 103
-test_batch_size: 102
+val_batch_size: 32
+test_batch_size: 32
 
 num_epochs: 200
 lr: .001
@@ -27,7 +27,7 @@ split_file_loc: '/workspace/data/data_folder/o2o/split_dict.pkl'
 dataset_root: '/workspace/data/data_folder/o2o/gifs_11_features_vsgnet'
 
 # relative location of the annotations file
-device: 'cuda:3'
+device: 'cuda:2'
 
 gif_size: 11
 
@@ -49,7 +49,7 @@ sampling_ratio: 1
 
 # Neural Network dimensions
 gnn_dimensions : [512, 512]
-lin_obj_dim : [1024, 1024]
+lin_obj_dim : [2048, 1024]
 
 graphical_branch_cr_classifier_dimension : [512, 3]
 graphical_branch_lr_classifier_dimension : [512, 5]

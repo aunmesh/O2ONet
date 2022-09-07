@@ -38,12 +38,12 @@ class ObjectBranch_ican(torch.nn.Module):
         self.obj_pool = nn.AvgPool2d(self.pool_size, padding=0, stride=(1,1)).to(self.config['device'])
 
         self.residual_transform = nn.Sequential(
-                                                nn.Linear(1024, 2048),
+                                                nn.Linear(2048, 2048),
                                                 nn.ReLU()
                                                 )
 
         self.res5 = nn.Sequential(
-				nn.Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False),
+				nn.Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False),
 				nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
 				nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding='same',bias=False),
 				nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),

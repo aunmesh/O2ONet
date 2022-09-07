@@ -368,8 +368,11 @@ class metric_tracker_multi_stream:
         self.metrics = {}
         
         self.relation_keys = ['mr', 'lr', 'cr']
-
-        self.streams = self.config['streams']
+        
+        try:
+            self.streams = self.config['streams']
+        except:
+            self.streams = ['']
         
         for stream in self.streams:
             for key in self.relation_keys:
@@ -420,12 +423,53 @@ class metric_tracker_multi_stream:
         return predictions, out_gt
 
 
+
+
+    # Accumulates all the tensors using mask in one matrix
+    def make_tensor_gpnn(self, predictions, gt, mask):
+        '''
+        This function makes a combined tensor for ground truth and predictions using the mask
+
+            pred: pred is a dictionary of predictions
+            gt  : gt is dictionary of ground truth labels
+            mask: mask is the places which should be considered 
+        '''
+        out_gt = {}
+        out_pred = {}
+        out_pred['combined'] = {}
+
+        for k in self.relation_keys:
+            out_pred['combined'][k] = []
+            out_gt[k] = []
+
+        # num_relations in different batch elements
+        num_relations = torch.split(mask, 1)
+
+        for b, n in enumerate(num_relations):
+
+            temp_num_relation = int(torch.sum(n))
+            # temp_num_relation = int(n)
+
+            for k in self.relation_keys:
+                out_gt[k].append( gt[k][b,:temp_num_relation,:] )
+                out_pred['combined'][k].append( predictions['combined'][k][b,:temp_num_relation,:] )
+
+        for k in self.relation_keys:
+            out_gt[k] = torch.cat(out_gt[k], 0)
+            out_pred['combined'][k] = torch.cat(out_pred['combined'][k], 0)
+
+        return out_pred, out_gt
+
+
     def calc_metrics(self, pred, gt):
 
         result = {}
         mask = gt['num_relation']
         
-        pred, gt = self.make_tensor(pred, gt, mask)
+        if self.config['model_name'] == 'GPNN':
+            pred, gt = self.make_tensor_gpnn(pred, gt, mask)
+        else:
+            pred, gt = self.make_tensor(pred, gt, mask)
         
         # calculating mAP metrics
         
@@ -516,4 +560,3 @@ class metric_tracker_multi_stream:
                 self.metrics[temp_AP_key].reset()
 
         self.last_result_cm = {}
-

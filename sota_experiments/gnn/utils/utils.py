@@ -6,7 +6,7 @@ def get_loss(output, target, criterions, config=None):
     if config['model_name'] == 'GPNN':
         
         if config['loss'] == 'masked loss':
-            return masked_loss(output, target, criterions)
+            return masked_loss_gpnn(output, target, criterions)
         
         if config['loss'] == 'masked loss with positive label encouragement':
             return masked_loss_encouraging_positive(
@@ -183,8 +183,6 @@ def pool_edge_features(edge_feature_mat, edge_index):
     
     return result
 
-
-
 def process_data_for_fpass(data_item, config):
    
    # obj_features, obj_pairs, slicing dictionary
@@ -193,7 +191,11 @@ def process_data_for_fpass(data_item, config):
         tensor_keys = ['num_obj', 'bboxes', 'lr', 'mr', 'cr', 'object_pairs']
         tensor_keys+= ['num_relation', 'frame_deep_features']
 
-        data_item['frame_deep_features'] = data_item['frame_deep_features'][:,5,:,:,:]
+        temp0 = data_item['frame_deep_features'][:,5,:,:,:]
+        temp1 = data_item['i3d_fmap'][:,:,:,:]
+        
+        data_item['frame_deep_features'] = torch.cat((temp0, temp1), dim=1)
+
         data_item['bboxes'] = data_item['bboxes'][:,:,5,:]
 
         for k in tensor_keys:
@@ -203,6 +205,29 @@ def process_data_for_fpass(data_item, config):
    
     # Pre-process the feature tensors
     
+    if config['model_name'] == 'GPNN':
+    
+        data_item['i3d_feature'] = torch.mean(data_item['i3d_feature_map'], 1)
+        data_item['cnn_bbox_feature'] = data_item['cnn_bbox_feature'][:,5,:,:]
+
+        # Padded features
+        obj_features = [ data_item[f] for f in config['features_list'] ]
+        obj_features = torch.cat(obj_features, 2)
+
+        data_item['num_relation'] = data_item['num_relation'].to(config['device'])
+        data_item['num_obj'] = data_item['num_obj'].to(config['device'])
+
+        data_item['object_pairs'] = data_item['object_pairs'].type(torch.long)
+        
+        data_item['lr'] = data_item['lr'].to(config['device'])
+        data_item['mr'] = data_item['mr'].to(config['device'])
+        data_item['cr'] = data_item['cr'].to(config['device'])
+
+        data_item['concatenated_node_features'] = obj_features.to(config['device']).double()
+        data_item['relative_spatial_feature'] = data_item['relative_spatial_feature'].flatten(3).to(config['device']).double()
+        return data_item
+
+
     central_frame_index = int(config['gif_size']/2)
 
     # i3d feature - perform average pool
@@ -268,9 +293,6 @@ def process_data_for_fpass(data_item, config):
         data_item['slicing']['node'] = node_slicing
         data_item['slicing']['edge'] = edge_slicing
 
-    if config['model_name'] == 'GPNN':
-        data_item['concatenated_node_features'] = obj_features.to(config['device'])
-        data_item['relative_spatial_feature'] = data_item['relative_spatial_feature'].flatten(3).to(config['device'])
  
 
     # print("DEBUG")

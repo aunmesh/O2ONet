@@ -129,15 +129,16 @@ class vsgnet(nn.Module):
         # all the incoming features are ordered according to object_pairs for each batch elements
         
         # classify using the spatial branch only
-
-        res_spatial = {}
+        res = {}
+        
+        res['spatial'] = {}
         for k in self.relation_keys:
-            res_spatial[k] = self.spatial_branch_classifiers[k](spatial_branch_output)
+            res['spatial'][k] = self.spatial_branch_classifiers[k](spatial_branch_output)
 
         # classify using the refined features
-        res_refined = {}
+        res['refined'] = {}
         for k in self.relation_keys:
-            res_refined[k] = self.refined_branch_classifiers[k](spatial_visual_refined_features)
+            res['refined'][k] = self.refined_branch_classifiers[k](spatial_visual_refined_features)
         
         # classify using the graphical features
 
@@ -148,14 +149,15 @@ class vsgnet(nn.Module):
                                                             graphical_branch_output,
                                                             num_rels, num_obj, obj_pairs
                                                                            )
-        res_graphical = {}
+
+        res['graphical'] = {}
         for k in self.relation_keys:
-            res_graphical[k] = self.graphical_branch_classifiers[k](
+            res['graphical'][k] = self.graphical_branch_classifiers[k](
                                             graphical_branch_output_paired
                                                                     )
         
-        result = {}
+        res['combined'] = {}
         for k in self.relation_keys:
-            result[k] = res_spatial[k] * res_refined[k] * res_graphical[k]
+            res['combined'][k] = res['spatial'][k] * res['refined'][k] * res['graphical'][k]
         
-        return result
+        return res

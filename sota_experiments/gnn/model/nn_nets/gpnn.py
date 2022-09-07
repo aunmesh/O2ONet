@@ -50,17 +50,17 @@ class GPNN(torch.nn.Module):
         # creating the cr classifier
         cr_dim = self.config['cr_dimensions']
         scr_dropout = self.config['cr_dropout']
-        self.cr_cls = relation_classifier(cr_dim, scr_dropout, self.config['device'])
+        self.cr_cls = relation_classifier(cr_dim, scr_dropout, self.config['device'], 1).double()
 
         # creating the lr classifier
         lr_dim = self.config['lr_dimensions']
         lr_dropout = self.config['lr_dropout']
-        self.lr_cls = relation_classifier(lr_dim, lr_dropout, self.config['device'])
+        self.lr_cls = relation_classifier(lr_dim, lr_dropout, self.config['device'], 1).double()
 
         # creating the mr classifier
         mr_dim = self.config['mr_dimensions']
         mr_dropout = self.config['mr_dropout']
-        self.mr_cls = relation_classifier(mr_dim, mr_dropout, self.config['device'])
+        self.mr_cls = relation_classifier(mr_dim, mr_dropout, self.config['device'], 1).double()
 
         # Hyperparameters to process node embeddings for classification
         self.agg = self.config['aggregator']
@@ -88,7 +88,7 @@ class GPNN(torch.nn.Module):
         # classifier_input is the tensor which will be passed to the fully connected classifier
         # for feature classification
         classifier_input = torch.empty(
-            num_batches, num_pairs, self.classifier_input_dimension, device=self.config['device'])
+            num_batches, num_pairs, self.classifier_input_dimension, device=self.config['device']).double()
 
         for b in range(num_batches):
 
@@ -169,11 +169,12 @@ class GPNN(torch.nn.Module):
                                                                  )
 
         predictions = {}
+        predictions['combined'] ={}
         # Make the batch for features
-        predictions['lr'] = self.lr_cls(num_pairs, classifier_input, batch_size)
-        predictions['cr'] = self.cr_cls(num_pairs, classifier_input, batch_size)
-        predictions['mr'] = self.mr_cls(num_pairs, classifier_input, batch_size)
-        predictions['adj_mat'] = pred_adj_mat
+        predictions['combined']['lr'] = self.lr_cls(num_pairs, classifier_input, batch_size)
+        predictions['combined']['cr'] = self.cr_cls(num_pairs, classifier_input, batch_size)
+        predictions['combined']['mr'] = self.mr_cls(num_pairs, classifier_input, batch_size)
+        predictions['combined']['adj_mat'] = pred_adj_mat
 
         return predictions
 

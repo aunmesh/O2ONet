@@ -27,7 +27,6 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
 
     ### Trains for One Epoch
     import time
-    start = time.time()
     for _, data_item in enumerate(train_loader):
         
         d_item, idx = data_item
@@ -36,13 +35,10 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
         optimizer.zero_grad()
         
         ### Modifying the data item if it needs modification before training
-        start2 = time.time()
         d_item = process_data_for_fpass(d_item, config)
-        end1 = time.time()
         
         ### Forward Pass
         output_dict = model(d_item)
-        end2 = time.time()
 
         ### Loss Calculation
         loss_dict = get_loss(output_dict, d_item, criterions, config)
@@ -58,14 +54,10 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
         
         ### Calculating metrics for this iteration
         step_results = metric_tracker.calc_metrics(output_dict, d_item)
-        end3 = time.time()
 
         ### Optimizing the Model
         optimizer.step()
-        end4 = time.time()
         
-        print("TIMES" , end4-start2, end3-start2, end2-start2, end1-start2)
-        break
 
     ### Aggregating metrics across all iterations
     metric_dict = metric_tracker.aggregate_metrics()

@@ -4,6 +4,7 @@ import torch
 import os
 from dataloader.dataset import dataset
 from dataloader.vsgnet_dataset import vsgnet_dataset
+from dataloader.gpnn_dataset import gpnn_dataset
 from model.nn_nets.vsgnet import vsgnet
 from model.nn_nets.drg import DRG
 from model.nn_nets.ican import iCAN
@@ -68,6 +69,10 @@ def get_dataset(config, split='train'):
     if config['dataset_description'] == 'vsgnet_dataset':
 
         return vsgnet_dataset(config, split)
+
+    if config['dataset_description'] == 'gpnn_dataset':
+
+        return gpnn_dataset(config, split)
 
 
 

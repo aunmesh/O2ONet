@@ -10,7 +10,7 @@ class ObjectBranch_vsgnet(torch.nn.Module):
         self.config = config
 
         self.Conv_objects = nn.Sequential(
-				nn.Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False),
+				nn.Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False),
 				nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
 				nn.Conv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bias=False),
 				nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
@@ -23,6 +23,11 @@ class ObjectBranch_vsgnet(torch.nn.Module):
         self.spatial_scale = self.config['spatial_scale']
         self.sampling_ratio = self.config['sampling_ratio']
 
+        self.residual_identity_projection = nn.Sequential(
+            nn.Conv2d(2048, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False),
+            nn.ReLU()
+        )
+        
         self.pooler = torchvision.ops.RoIAlign(
                                                 self.pool_size, 
                                                 self.spatial_scale, 
@@ -74,7 +79,7 @@ class ObjectBranch_vsgnet(torch.nn.Module):
 
         ##Objects##
         residual_objects = roi_pool_objects
-        res_objects = self.Conv_objects(roi_pool_objects) + residual_objects
+        res_objects = self.Conv_objects(roi_pool_objects) + self.residual_identity_projection(residual_objects)
         res_av_objects = self.obj_pool(res_objects)
         
         # flattening the output
