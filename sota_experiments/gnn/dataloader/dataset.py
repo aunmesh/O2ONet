@@ -24,7 +24,6 @@ class dataset(Dataset):
         self.dataset = read_data(self.dataset_location)
         
         if self.config['overfit'] and split=='train':
-            print("here")
             self.dataset = self.dataset[:self.config['train_batch_size']]
             # self.dataset = self.dataset[:1]
     

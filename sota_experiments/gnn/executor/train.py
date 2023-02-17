@@ -26,9 +26,9 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
     loss_aggregator = loss_epoch_aggregator(stage='train')
 
     ### Trains for One Epoch
-    import time
-    for _, data_item in enumerate(train_loader):
-        
+    
+    for temp_flag, data_item in enumerate(train_loader):
+       
         d_item, idx = data_item
         
         ### Re-setting optimizer
@@ -57,7 +57,6 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
 
         ### Optimizing the Model
         optimizer.step()
-        
 
     ### Aggregating metrics across all iterations
     metric_dict = metric_tracker.aggregate_metrics()

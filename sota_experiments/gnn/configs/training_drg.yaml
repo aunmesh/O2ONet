@@ -24,10 +24,15 @@ dataset_description: 'vsgnet_dataset'
 
 split_file_loc: '/workspace/data/data_folder/o2o/split_dict.pkl'
 # root folder of the dataset
-dataset_root: '/workspace/data/data_folder/o2o/gifs_11_features_vsgnet'
+dataset_root: '/workspace/work/vsgnet_dataset/vsgnet_light_combined'
 
 # relative location of the annotations file
-device: 'cuda:2'
+
+train_annotations: 'vsgnet_light_train.pkl'
+val_annotations: 'vsgnet_light_val.pkl'
+test_annotations: 'vsgnet_light_test.pkl'
+
+device: 'cuda:1'
 
 gif_size: 11
 
@@ -35,10 +40,10 @@ loss_calculation: 'masked loss drg'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ooi_icra_drg'
+wandb_project_name: 'icra_submission_drg'
 wandb_entity: 'aunmesh'
 
-log_results: False
+log_results: True
 
 streams: ['object', 'graphical', 'combined']
 

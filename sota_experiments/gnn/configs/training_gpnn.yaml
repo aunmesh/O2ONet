@@ -40,7 +40,7 @@ dataset_root: '/workspace/data/data_folder/o2o/all_features/gpnn_with_edge'
 train_annotations: 'train.pkl'
 val_annotations: 'val.pkl'
 test_annotations: 'test.pkl'
-device: 'cuda:2'
+device: 'cuda:1'
 
 iou_threshold: 0.5
 dis_threshold: 0.5
@@ -52,10 +52,10 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ooi_icra_gpnn'
+wandb_project_name: 'icra_submission_gpnn'
 wandb_entity: 'aunmesh'
 
-log_results: False
+log_results: True
 streams: ['combined']
 
 # model args for gpnn

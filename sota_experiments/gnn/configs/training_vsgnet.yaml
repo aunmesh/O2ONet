@@ -24,7 +24,11 @@ dataset_description: 'vsgnet_dataset'
 
 split_file_loc: '/workspace/data/data_folder/o2o/split_dict.pkl'
 # root folder of the dataset
-dataset_root: '/workspace/data/data_folder/o2o/gifs_11_features_vsgnet'
+dataset_root: '/workspace/work/vsgnet_dataset/vsgnet_light_combined'
+
+train_annotations: 'vsgnet_light_train.pkl'
+val_annotations: 'vsgnet_light_val.pkl'
+test_annotations: 'vsgnet_light_test.pkl'
 
 # relative location of the annotations file
 device: 'cuda:2'
@@ -35,10 +39,10 @@ loss_calculation: 'masked loss vsgnet'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ooi_icra_vsgnet'
+wandb_project_name: 'icra_submission_vsgnet'
 wandb_entity: 'aunmesh'
 
-log_results: False
+log_results: True
 
 roi_pool_size: [10, 10]
 spatial_scale: 1

@@ -191,10 +191,10 @@ def process_data_for_fpass(data_item, config):
         tensor_keys = ['num_obj', 'bboxes', 'lr', 'mr', 'cr', 'object_pairs']
         tensor_keys+= ['num_relation', 'frame_deep_features']
 
-        temp0 = data_item['frame_deep_features'][:,5,:,:,:]
-        temp1 = data_item['i3d_fmap'][:,:,:,:]
+        # temp0 = data_item['frame_deep_features'][:,5,:,:,:]
+        # temp1 = data_item['i3d_fmap'][:,:,:,:]
         
-        data_item['frame_deep_features'] = torch.cat((temp0, temp1), dim=1)
+        # data_item['frame_deep_features'] = torch.cat((temp0, temp1), dim=1)
 
         data_item['bboxes'] = data_item['bboxes'][:,:,5,:]
 
