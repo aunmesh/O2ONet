@@ -1,8 +1,65 @@
 # Implementations for all the metrics
 import torch
+import torch.nn.functional as F
 import torchmetrics as tm
 import copy
 import torch.nn.functional as F
+
+class metric_tracker_action_recog:
+
+    def __init__(self, config, mode='train'):
+
+        '''
+        # Make Metric Objects
+        # Needed metrics:
+
+        average precision
+        mAP
+        confusion matrix 
+        '''
+
+        self.config = config
+        device = self.config['device']
+
+        self.action_categories = [ 'AssembleCabinet', 'ChangeCarTire', 'FuelCar', 'InstallBicycleRack', 'InstallShowerHead', 'ParkParallel',
+                             'PolishCar', 'ReplaceBatteryOnTVControl', 'ReplaceDoorKnob', 'ReplaceToiletSeat', 'UseJack']
+
+        self.action_classes = len(self.action_categories)
+        self.mode = mode + '_'
+
+        self.metrics = {}
+        
+        self.metrics[self.mode +'Accuracy' ] = tm.Accuracy(num_classes=self.action_classes, average='macro').to(device)
+
+    def calc_metrics(self, pred, gt):
+
+        result = {}
+        
+        pred = F.softmax(pred['action_index_logit'], dim=1)
+
+        # Calculating Accuracy metrics
+        result[self.mode + 'Accuracy'] = self.metrics[self.mode + 'Accuracy']( pred, gt['action_index'] )
+        
+        # Metric for deciding whether to save the model or not
+        result['model_score'] = result[self.mode + 'Accuracy']
+
+        return result
+    
+    def aggregate_metrics(self):
+
+        result = {}
+        
+        # Calculating mAP metrics
+        result[self.mode + 'Accuracy'] = self.metrics[self.mode + 'Accuracy'].compute()
+        result['model_score'] = result[self.mode + 'Accuracy']
+        
+        return result
+
+
+    def reset_metrics(self):
+
+        self.metrics[self.mode + 'Accuracy'].reset()
+
 
 class metric_tracker:
 

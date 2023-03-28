@@ -2,16 +2,27 @@ from model.nn_nets.ooi_net import ooi_net as ooi_net
 from model.nn_nets.gpnn import GPNN as GPNN
 import torch
 import os
+
+
 from dataloader.dataset import dataset
 from dataloader.vsgnet_dataset import vsgnet_dataset
 from dataloader.gpnn_dataset import gpnn_dataset
+from dataloader.action_recog_dataset import action_recog_dataset
+
 from model.nn_nets.vsgnet import vsgnet
 from model.nn_nets.drg import DRG
 from model.nn_nets.ican import iCAN
-
+from model.nn_nets.action_recog_nets.action_recog import action_net_single_stream
 import torch.nn as nn
 
+from metrics.metrics import metric_tracker_action_recog
+
 def construct_criterions(config):
+    
+    if config['model_name'] == 'action_recog_test':
+        criterions = {}
+        criterions['action'] = nn.CrossEntropyLoss().to(config['device'])
+        return criterions
     
     if config['model_name'] == 'vsgnet':
         
@@ -32,7 +43,20 @@ def construct_criterions(config):
     return criterions
         
 
+def get_metric_trackers(config):
+    
+    if config['model_name'] == 'action_recog_test':
+        train_metric_tracker = metric_tracker_action_recog(config, mode='train')
+        val_metric_tracker = metric_tracker_action_recog(config, mode='val')
+        test_metric_tracker = metric_tracker_action_recog(config, mode='test')
+        
+        return train_metric_tracker, val_metric_tracker, test_metric_tracker
+
 def get_model(config):
+
+    if config['model_name'] == 'action_recog_test':
+        model = action_net_single_stream(config).to(config['device'])
+        return model
 
     if config['model_name'] == 'ican':
 
@@ -62,6 +86,10 @@ def get_model(config):
 
 def get_dataset(config, split='train'):
 
+    if config['dataset_description'] == 'action_dataset':
+        
+        return action_recog_dataset(config, split)
+                    
     if config['dataset_description'] == 'ooi_dataset':
 
         return dataset(config, split)

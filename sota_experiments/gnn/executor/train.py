@@ -6,7 +6,7 @@ import torch
 import loss
 from utils.utils import process_data_for_fpass, process_data_for_metrics, loss_epoch_aggregator, get_loss
 from tqdm import tqdm as tqdm
-
+from time import time
 def train(model, train_loader, optimizer, config, criterions, metric_tracker):
     """
     Args:
@@ -26,8 +26,8 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
     loss_aggregator = loss_epoch_aggregator(stage='train')
 
     ### Trains for One Epoch
-    
     for temp_flag, data_item in enumerate(train_loader):
+        t_i = time()
        
         d_item, idx = data_item
         
@@ -57,7 +57,10 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
 
         ### Optimizing the Model
         optimizer.step()
-
+        
+        t_f = time()
+        # print("Time Taken", t_f - t_i)
+        
     ### Aggregating metrics across all iterations
     metric_dict = metric_tracker.aggregate_metrics()
     

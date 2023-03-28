@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/workspace/work/O2ONet/sota_experiments/gnn")
+sys.path.append("/workspace/work/misc/O2ONet/sota_experiments/gnn")
 import os
 from utils.utils import get_parser, config_loader
 from train import train
@@ -29,7 +29,6 @@ def main(args):
     
     ### Construct criterions
     criterions = construct_criterions(config)
-    
  
     ### Load Logger  ( UNCOMMENT )
     if config['log_results']:
@@ -52,9 +51,7 @@ def main(args):
         config = logger.config
 
     ### Creating metric tracker objects
-    train_metric_tracker = metric_tracker_multi_stream(config, mode='train')
-    val_metric_tracker = metric_tracker_multi_stream(config, mode='val')
-    test_metric_tracker = metric_tracker_multi_stream(config, mode='test')
+    train_metric_tracker, val_metric_tracker, test_metric_tracker = get_metric_trackers(config)
     
     ### Training 
     if args.train:
@@ -92,15 +89,10 @@ def main(args):
             
             ### Save the model and log results
             is_best = False
-            if 'streams' in config.keys():
-                if best_mAP < val_result['val_combined_mAP_all']:
-                    best_mAP = val_result['val_combined_mAP_all']
-                    is_best = True
 
-            else:
-                if best_mAP < val_result['val_mAP_all']:
-                    best_mAP = val_result['val_mAP_all']
-                    is_best = True
+            if best_mAP < val_result['model_score']:
+                best_mAP = val_result['model_score']
+                is_best = True
 
             ### Saving the best model if it is there
             save_state(model, optimizer, e, config, is_best)  # ADD FUNCTIONALITY FOR SAVING BEST MODEL

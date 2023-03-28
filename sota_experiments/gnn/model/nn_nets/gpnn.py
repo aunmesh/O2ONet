@@ -103,17 +103,14 @@ class GPNN(torch.nn.Module):
 
     def forward(self, data_item):
 
-        # dimension - batch_size, 12, 12, 11, 20
-        # self, edge_features, node_features, adj_mat, node_labels, human_nums, obj_nums,  args
-
         edge_features = data_item['relative_spatial_feature']
         node_features = data_item['concatenated_node_features']
-        
+
         batch_size = node_features.size()[0]
 
         # maximum number of nodes in a gif
         max_num_nodes = data_item['concatenated_node_features'].size()[1]
-        
+
         if self.config['resize_feature_to_message_size']:
             edge_features = self.edge_feature_resize(edge_features)
             node_features = self.node_feature_resize(node_features)

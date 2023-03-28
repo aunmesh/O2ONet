@@ -3,6 +3,12 @@ from executor.loss import *
 
 def get_loss(output, target, criterions, config=None):
     
+    if config['model_name'] == 'action_recog_test':
+    
+        loss = {}
+        loss['loss_total'] = criterions['action'](output['action_index_logit'], target['action_index'])
+        return loss
+    
     if config['model_name'] == 'GPNN':
         
         if config['loss'] == 'masked loss':
@@ -22,7 +28,7 @@ def get_loss(output, target, criterions, config=None):
         return masked_loss_drg(output, target, criterions, config)
 
     if config['loss_calculation'] == 'masked loss ican':
-        return masked_loss_ican(output, target, criterions, config)
+        return masked_loss_ican(output, target, criterions, config)     
 
 
 def get_gnn(config, in_dim, out_dim):
@@ -184,6 +190,10 @@ def pool_edge_features(edge_feature_mat, edge_index):
     return result
 
 def process_data_for_fpass(data_item, config):
+   
+    if config['model_name'] == 'action_recog_test':
+        data_item['action_index'] = data_item['action_index'].to(config['device'])
+        return data_item
    
    # obj_features, obj_pairs, slicing dictionary
     if config['model_name'] == 'vsgnet' or config['model_name'] == 'drg' or config['model_name'] == 'ican':

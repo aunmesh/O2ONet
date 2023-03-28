@@ -1,0 +1,33 @@
+train_batch_size: 32
+val_batch_size: 206
+test_batch_size: 205
+
+num_epochs: 500
+lr: .001
+
+optimizer: 'Adam'
+
+# After how many epochs to save the model
+save_epoch: 1
+
+model_name: 'action_recog_test'
+
+overfit: False
+
+model_saving_path: '/workspace/work/misc/results_RAL/'
+
+dataset_description: 'action_dataset'
+dataset_root: '/workspace/data/data_folder/o2o/gifs_11_features_ral_lighter'
+split_file: '/workspace/data/data_folder/o2o/split_dict.pkl'
+
+# relative location of the annotations file
+device: 'cuda:2'
+
+loss_calculation: 'action recog loss'
+comments: 'None'
+
+# wandb_configs
+wandb_project_name: 'ral_action_recog_debug'
+wandb_entity: 'aunmesh'
+
+log_results: True
