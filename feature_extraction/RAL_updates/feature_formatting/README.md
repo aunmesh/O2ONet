@@ -1,0 +1,1 @@
+Formats the feature files and organizes them so as to make 1 single file which has all the features required by a method.
