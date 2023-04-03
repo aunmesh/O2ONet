@@ -217,12 +217,9 @@ def process_data_for_fpass(data_item, config):
     
     if config['model_name'] == 'GPNN':
     
-        data_item['i3d_feature'] = torch.mean(data_item['i3d_feature_map'], 1)
-        data_item['cnn_bbox_feature'] = data_item['cnn_bbox_feature'][:,5,:,:]
+        # data_item['i3d_feature'] = torch.mean(data_item['i3d_feature_map'], 1)
+        # data_item['cnn_bbox_feature'] = data_item['object_2d_cnn_feature'][:,5,:,:]
 
-        # Padded features
-        obj_features = [ data_item[f] for f in config['features_list'] ]
-        obj_features = torch.cat(obj_features, 2)
 
         data_item['num_relation'] = data_item['num_relation'].to(config['device'])
         data_item['num_obj'] = data_item['num_obj'].to(config['device'])
@@ -233,8 +230,30 @@ def process_data_for_fpass(data_item, config):
         data_item['mr'] = data_item['mr'].to(config['device'])
         data_item['cr'] = data_item['cr'].to(config['device'])
 
+        # Padded features
+        obj_features = [ data_item[f] for f in config['features_list'] ]
+        obj_features = []
+        
+        for f in config['features_list']:
+            
+            # increased by 1 to take care of the batching dimension
+            frame_dim = config['custom_filter_dict'][f]['frame_dim'] + 1
+            
+            frame_index = config['custom_filter_dict'][f]['frame_index']
+            frame_index = torch.tensor([frame_index])
+            
+            temp_feat = data_item[f].index_select( 
+                                                    dim = frame_dim,
+                                                    index = frame_index
+                                                  ).squeeze()
+            
+            obj_features.append(temp_feat)
+        
+        obj_features = torch.cat(obj_features, 2)
+
         data_item['concatenated_node_features'] = obj_features.to(config['device']).double()
         data_item['relative_spatial_feature'] = data_item['relative_spatial_feature'].flatten(3).to(config['device']).double()
+        
         return data_item
 
 

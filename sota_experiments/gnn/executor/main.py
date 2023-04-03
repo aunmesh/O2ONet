@@ -13,7 +13,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import torch
 from log_results import wandb_logger
-from metrics.metrics import metric_tracker_multi_stream
+from metrics.metrics import metric_tracker
 from utils.main_utils import *
 
 def main(args):
@@ -86,12 +86,12 @@ def main(args):
             
             ### Validation for an epoch and get the result dictionary
             val_result = val(model, val_loader, config, criterions, val_metric_tracker)
-            
+
             ### Save the model and log results
             is_best = False
 
-            if best_mAP < val_result['model_score']:
-                best_mAP = val_result['model_score']
+            if best_mAP < val_result[ config['best_model_selection_key'] ]:
+                best_mAP = val_result[ config['best_model_selection_key'] ]
                 is_best = True
 
             ### Saving the best model if it is there

@@ -61,6 +61,8 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
         t_f = time()
         # print("Time Taken", t_f - t_i)
         
+        break
+        
     ### Aggregating metrics across all iterations
     metric_dict = metric_tracker.aggregate_metrics()
     

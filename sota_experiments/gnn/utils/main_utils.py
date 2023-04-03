@@ -12,10 +12,10 @@ from dataloader.action_recog_dataset import action_recog_dataset
 from model.nn_nets.vsgnet import vsgnet
 from model.nn_nets.drg import DRG
 from model.nn_nets.ican import iCAN
-from model.nn_nets.action_recog_nets.action_recog import action_net_single_stream
+from model.nn_nets.action_recog_nets.action_recog import action_net_cnn_stream
 import torch.nn as nn
 
-from metrics.metrics import metric_tracker_action_recog
+from metrics.metrics import metric_tracker, metric_tracker_multi_stream, metric_tracker_action_recog
 
 def construct_criterions(config):
     
@@ -51,11 +51,20 @@ def get_metric_trackers(config):
         test_metric_tracker = metric_tracker_action_recog(config, mode='test')
         
         return train_metric_tracker, val_metric_tracker, test_metric_tracker
+    
+    else:
+
+        train_metric_tracker = metric_tracker_multi_stream(config, mode='train')
+        val_metric_tracker = metric_tracker_multi_stream(config, mode='val')
+        test_metric_tracker = metric_tracker_multi_stream(config, mode='test')
+
+        return train_metric_tracker, val_metric_tracker, test_metric_tracker
+        
 
 def get_model(config):
 
     if config['model_name'] == 'action_recog_test':
-        model = action_net_single_stream(config).to(config['device'])
+        model = action_net_cnn_stream(config).to(config['device'])
         return model
 
     if config['model_name'] == 'ican':
