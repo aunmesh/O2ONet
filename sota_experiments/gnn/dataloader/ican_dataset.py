@@ -43,13 +43,10 @@ class ican_dataset(Dataset):
                 self.file_list.append(temp_path)
         
     def __len__(self):
-        return 10
-        # return len(self.file_list)
+        return len(self.file_list)
 
     def __getitem__(self, idx):
         
-        idx = 5
-
         data_item = torch.load( self.file_list[idx] )
 
         if data_item['i3d_feature_map'].shape[1:] != torch.Size([23, 40]):

@@ -2,10 +2,6 @@ train_batch_size: 2
 val_batch_size: 2
 test_batch_size: 2
 
-# train_batch_size: 32
-# val_batch_size: 32
-# test_batch_size: 32
-
 num_epochs: 200
 lr: .001
 
@@ -43,10 +39,10 @@ comments: 'None'
 wandb_project_name: 'ral_submission_ican'
 wandb_entity: 'aunmesh'
 
-log_results: True
+log_results: False
 
-# streams: ['visual', 'spatial', 'combined']
-streams: ['combined']
+streams: ['visual', 'spatial', 'combined']
+# streams: ['combined']
 
 roi_pool_size: [7, 7]
 spatial_scale: 1
@@ -57,20 +53,20 @@ sampling_ratio: 1
 gnn_dimensions : [512, 512]
 lin_obj_dim : [1024, 1024]
 
-# spatial_branch_cr_classifier_dimension : [512, 3]
-# spatial_branch_lr_classifier_dimension : [512, 5]
-# spatial_branch_mr_classifier_dimension : [512, 14]
+spatial_branch_cr_classifier_dimension : [512, 3]
+spatial_branch_lr_classifier_dimension : [512, 5]
+spatial_branch_mr_classifier_dimension : [512, 14]
 
-# visual_branch_cr_classifier_dimension : [1024, 3]
-# visual_branch_lr_classifier_dimension : [1024, 5]
-# visual_branch_mr_classifier_dimension : [1024, 14]
+visual_branch_cr_classifier_dimension : [1024, 3]
+visual_branch_lr_classifier_dimension : [1024, 5]
+visual_branch_mr_classifier_dimension : [1024, 14]
 
 # combined_branch_cr_classifier_dimension : [512, 3]
 # combined_branch_lr_classifier_dimension : [512, 5]
 # combined_branch_mr_classifier_dimension : [512, 14]
 
-combined_branch_cr_classifier_dimension : [1536, 3]
-combined_branch_lr_classifier_dimension : [1536, 5]
-combined_branch_mr_classifier_dimension : [1536, 14]
+# combined_branch_cr_classifier_dimension : [1536, 3]
+# combined_branch_lr_classifier_dimension : [1536, 5]
+# combined_branch_mr_classifier_dimension : [1536, 14]
 
 gnn_dropout : 0.15

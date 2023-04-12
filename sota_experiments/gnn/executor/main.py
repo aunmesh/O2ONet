@@ -66,7 +66,6 @@ def main(args):
 
         ### create validation data loader
         val_dataset = get_dataset(config, 'val')
-        
         val_loader = DataLoader(val_dataset, batch_size=config['val_batch_size'])
 
         end_epoch = config['num_epochs']
