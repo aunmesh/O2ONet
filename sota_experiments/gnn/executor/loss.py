@@ -220,7 +220,8 @@ def masked_loss_gpnn(predictions, target, criterions):
         loss['loss_total'] += loss['loss_' + k]
 
     loss['loss_total']/=( 1.0 * len(keys))
-
+    
+    
     return loss
 
 
@@ -318,7 +319,8 @@ def masked_loss_drg(predictions, target, criterions, config):
     
     lower_index = 0
     upper_index = 0
-
+    
+    
     for b in range(b_size):
         curr_num_rel = int(mask[b])
         upper_index += curr_num_rel
@@ -352,10 +354,6 @@ def masked_loss_drg(predictions, target, criterions, config):
 
     return loss
 
-
-
-
-
 def masked_loss_ican(predictions, target, criterions, config):
 
     '''
@@ -379,17 +377,20 @@ def masked_loss_ican(predictions, target, criterions, config):
     loss['loss_lr'] = 0
 
     keys = [ 'lr', 'mr', 'cr']
+    
     streams = config['streams']
+    # streams = ['visual', 'spatial']
 
     b_size = target['lr'].shape[0]
     
     lower_index = 0
     upper_index = 0
-
+    
+    
     for b in range(b_size):
         curr_num_rel = int(mask[b])
         upper_index += curr_num_rel
-        
+    
         for k in keys:
             
             if k == 'cr':

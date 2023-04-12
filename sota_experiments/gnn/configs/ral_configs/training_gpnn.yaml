@@ -2,7 +2,7 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 200
+num_epochs: 60
 lr: .001
 features_list: ['geometric_feature', 'object_2d_cnn_feature', 'object_i3d_feature', 'motion_feature']
 
@@ -43,7 +43,7 @@ model_name: 'GPNN'
 GNN: 'GPNN'
 overfit: False
 
-model_saving_path: '/workspace/work/results_ICRA_gpnn/'
+model_saving_path: '/workspace/work/ral_gpnn/'
 
 # Neural Network dimensions
 cr_dimensions : [256, 3]
@@ -60,7 +60,7 @@ aggregator : 'mean'
 dataset_description: 'gpnn_dataset'
 
 # root folder of the dataset
-full_dataset_location: '/workspace/data/data_folder/o2o/ral_formatted_features/gpnn/gpnn_feats.pkl'
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/gpnn/gpnn_feats.pkl'
 split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
 
 # relative location of the annotations file
@@ -77,7 +77,7 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'icra_submission_gpnn'
+wandb_project_name: 'ral_gpnn'
 wandb_entity: 'aunmesh'
 
 log_results: False

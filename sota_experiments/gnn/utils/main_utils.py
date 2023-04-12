@@ -34,11 +34,22 @@ def construct_criterions(config):
         
         return criterions
 
+    if config['model_name'] == 'ican':
+        
+        criterions = {}
+        
+        criterions['cr'] = nn.NLLLoss().to(config['device'])
+        criterions['lr'] = nn.BCELoss().to(config['device'])
+        criterions['mr'] = nn.BCELoss().to(config['device'])
+        
+        return criterions
+
+
     criterions = {}
     
-    criterions['cr'] = nn.CrossEntropyLoss().to(config['device'])
-    criterions['lr'] = nn.BCEWithLogitsLoss().to(config['device'])
-    criterions['mr'] = nn.BCEWithLogitsLoss().to(config['device'])
+    # criterions['cr'] = nn.CrossEntropyLoss().to(config['device'])
+    # criterions['lr'] = nn.BCEWithLogitsLoss().to(config['device'])
+    # criterions['mr'] = nn.BCEWithLogitsLoss().to(config['device'])
     
     return criterions
         
@@ -60,6 +71,7 @@ def get_metric_trackers(config):
 
         return train_metric_tracker, val_metric_tracker, test_metric_tracker
         
+
 
 def get_model(config):
 
@@ -92,6 +104,7 @@ def get_model(config):
         model = GPNN(config).to(config['device'])
         return model
 
+from dataloader.ican_dataset import ican_dataset
 
 def get_dataset(config, split='train'):
 
@@ -111,6 +124,9 @@ def get_dataset(config, split='train'):
 
         return gpnn_dataset(config, split)
 
+    if config['dataset_description'] == 'ican_dataset':
+
+        return ican_dataset(config, split)
 
 
 def freeze_layers(model, freezing_list):

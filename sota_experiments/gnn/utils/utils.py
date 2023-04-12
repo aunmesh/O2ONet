@@ -194,9 +194,16 @@ def process_data_for_fpass(data_item, config):
     if config['model_name'] == 'action_recog_test':
         data_item['action_index'] = data_item['action_index'].to(config['device'])
         return data_item
+
+    if config['model_name'] == 'ican':
+        for k in data_item.keys():
+            if k == 'metadata':
+                continue
+            data_item[k] = data_item[k].to(config['device'])
+        return data_item
    
    # obj_features, obj_pairs, slicing dictionary
-    if config['model_name'] == 'vsgnet' or config['model_name'] == 'drg' or config['model_name'] == 'ican':
+    if config['model_name'] == 'vsgnet' or config['model_name'] == 'drg':# or config['model_name'] == 'ican':
 
         tensor_keys = ['num_obj', 'bboxes', 'lr', 'mr', 'cr', 'object_pairs']
         tensor_keys+= ['num_relation', 'frame_deep_features']

@@ -43,6 +43,5 @@ class gpnn_dataset(Dataset):
         return len(self.dataset)
 
     def __getitem__(self, idx):
-
         data_item = self.dataset[idx]
         return data_item, idx

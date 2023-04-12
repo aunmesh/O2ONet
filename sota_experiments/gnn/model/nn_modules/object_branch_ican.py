@@ -69,8 +69,6 @@ class ObjectBranch_ican(torch.nn.Module):
         
         return bboxes_scaled
 
-
-    
     def forward(self, data_item):
 
         frame_feature_map = data_item['frame_deep_features']
@@ -78,30 +76,30 @@ class ObjectBranch_ican(torch.nn.Module):
         num_obj = data_item['num_obj']
         obj_pairs = data_item['object_pairs']
         num_rels = data_item['num_relation']
-        
+
         # Get the output from subbranch for all the objects
         frame_width = data_item['metadata']['frame_width'][0]
         frame_height = data_item['metadata']['frame_height'][0]
         image_dimension = [frame_width, frame_height]
-        
+
         # getting the bboxes for the central frame
         bboxes_scaled = self.scale_bboxes(bboxes, frame_feature_map.shape, image_dimension)
 
         # Get 7*7 roi pool of all the regions 
         bboxes_list = torch.split(bboxes_scaled, 1, dim=0)
         bboxes_list = [b.squeeze(0) for b in bboxes_list]
-        
+
         tot_num_obj = int(torch.sum(num_obj))
         slicing_tensor = torch.zeros((tot_num_obj), device=self.config['device'])
         lower_index = 0
         upper_index = 0
-        
+
         # removing unnecessary objects is important to reduce computation downstream
         for i, b in enumerate(bboxes_list):
 
             temp_num_obj = int(num_obj[i])
             bboxes_list[i] = b[:temp_num_obj]
-            
+
             upper_index += temp_num_obj
             slicing_tensor[lower_index:upper_index] = i
             lower_index = upper_index
