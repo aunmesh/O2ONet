@@ -46,6 +46,7 @@ def val( model, val_loader, config, criterions, metric_tracker):
         
         ### Calculating metrics for this particular pass
         step_results = metric_tracker.calc_metrics(output_dict, d_item)
+        break
         
     ### Get the average metric for the entire run
     metric_dict = metric_tracker.aggregate_metrics()
