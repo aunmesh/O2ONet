@@ -34,7 +34,7 @@ def construct_criterions(config):
         
         return criterions
 
-    if config['model_name'] == 'ican':
+    if config['model_name'] == 'ican': # or config['model_name'] == 'drg':
         
         criterions = {}
         
@@ -43,6 +43,27 @@ def construct_criterions(config):
         criterions['mr'] = nn.BCELoss().to(config['device'])
         
         return criterions
+
+    if config['model_name'] == 'GPNN_icra' or config['model_name'] == 'graph_rcnn':
+        
+        criterions = {}
+        
+        criterions['cr'] = nn.CrossEntropyLoss().to(config['device'])
+        criterions['lr'] = nn.BCEWithLogitsLoss().to(config['device'])
+        criterions['mr'] = nn.BCEWithLogitsLoss().to(config['device'])
+        
+        return criterions
+
+    if config['model_name'] == 'drg':
+        
+        criterions = {}
+        
+        criterions['cr'] = nn.CrossEntropyLoss().to(config['device'])
+        criterions['lr'] = nn.BCELoss().to(config['device'])
+        criterions['mr'] = nn.BCELoss().to(config['device'])
+        
+        return criterions
+
 
 
     criterions = {}
@@ -72,8 +93,13 @@ def get_metric_trackers(config):
         return train_metric_tracker, val_metric_tracker, test_metric_tracker
         
 
+from model.nn_nets.graph_rcnn import graph_rcnn
 
 def get_model(config):
+
+    if config['model_name'] == 'graph_rcnn':
+        model = graph_rcnn(config).to(config['device'])
+        return model
 
     if config['model_name'] == 'action_recog_test':
         model = action_net_cnn_stream(config).to(config['device'])
@@ -104,6 +130,11 @@ def get_model(config):
         model = GPNN(config).to(config['device'])
         return model
 
+    if config['model_name'] == 'GPNN_icra':
+
+        model = GPNN(config).to(config['device'])
+        return model
+
 from dataloader.ican_dataset import ican_dataset
 
 def get_dataset(config, split='train'):
@@ -120,9 +151,13 @@ def get_dataset(config, split='train'):
 
         return vsgnet_dataset(config, split)
 
-    if config['dataset_description'] == 'gpnn_dataset':
+    # if config['dataset_description'] == 'gpnn_dataset':
 
-        return gpnn_dataset(config, split)
+    #    # return gpnn_dataset(config, split)
+
+    if config['dataset_description'] == 'gpnn_icra_dataset':
+
+        return dataset(config, split)
 
     if config['dataset_description'] == 'ican_dataset':
 

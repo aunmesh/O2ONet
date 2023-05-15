@@ -523,10 +523,13 @@ class metric_tracker_multi_stream:
         result = {}
         mask = gt['num_relation']
         
-        if self.config['model_name'] == 'GPNN':
-            pred, gt = self.make_tensor_gpnn(pred, gt, mask)
-        else:
-            pred, gt = self.make_tensor(pred, gt, mask)
+        # if self.config['model_name'] == 'GPNN' or self.config['model_name'] == 'GPNN_icra' :
+        #     pred, gt = self.make_tensor_gpnn(pred, gt, mask)
+        # else:
+        #     pred, gt = self.make_tensor(pred, gt, mask)
+
+        pred, gt = self.make_tensor_gpnn(pred, gt, mask)
+
         
         # calculating mAP metrics
         

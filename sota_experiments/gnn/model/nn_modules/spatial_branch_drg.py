@@ -13,14 +13,16 @@ class SpatialBranch_drg(torch.nn.Module):
         
         self.conv_sp_map=nn.Sequential(
                         nn.Conv2d(2, 64, kernel_size=(5, 5)),
+                        nn.ReLU(),
                         nn.MaxPool2d(kernel_size=(2, 2)),
                         nn.Conv2d(64, 32, kernel_size=(5,5)),
+                        nn.ReLU(),
                         nn.MaxPool2d(kernel_size=(2, 2)),
-                        nn.AvgPool2d((13,13),padding=0,stride=(1,1))
+                        # nn.AvgPool2d((13,13),padding=0,stride=(1,1))
                                     )
 
         self.spmap_up=nn.Sequential(
-                    nn.Linear(32,512),
+                    nn.Linear(5408,4800),
                     nn.ReLU(),
                     )
 	

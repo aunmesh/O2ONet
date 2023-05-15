@@ -40,8 +40,10 @@ class gpnn_dataset(Dataset):
         del self.full_dataset
 
     def __len__(self):
-        return len(self.dataset)
+        # return len(self.dataset)
+        return 10 * self.config['train_batch_size']
 
     def __getitem__(self, idx):
+        idx = 4
         data_item = self.dataset[idx]
         return data_item, idx

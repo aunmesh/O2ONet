@@ -282,13 +282,30 @@ def masked_loss_vsgnet(predictions, target, criterions):
     
     # adding all losses together
     for k in keys:
+        loss['loss_' + k] /= (1.0 * b_size)
         loss['loss_total'] += loss['loss_' + k]
 
     loss['loss_total']/=( 1.0 * len(keys))
-
+    print(loss['loss_total'])
     return loss
 
+import numpy as np
+def calc_bce(probab, target):
 
+    num_vals = len(target)
+    total_sum = 0
+
+    for i in range(num_vals):
+        temp_p = probab[i]
+        temp_t = target[i]
+        if temp_t == 1:
+            temp_sum = -1 * np.log(temp_p)
+        elif temp_t == 0:
+            temp_sum = -1 * np.log(1 - temp_p)
+        total_sum+=temp_sum
+
+    # print(total_sum, total_sum/num_vals)
+    return total_sum/num_vals
 
 def masked_loss_drg(predictions, target, criterions, config):
 
@@ -329,19 +346,39 @@ def masked_loss_drg(predictions, target, criterions, config):
             
             if k == 'cr':
                 for stream in streams:
+                    
                     temp_predictions = predictions[stream][k][lower_index:upper_index, :]
-                    temp_predictions = torch.log(temp_predictions + 1e-20)
+                    temp_predictions = temp_predictions + 1e-20
+                    
                     temp_targets = target[k][b, :curr_num_rel, :]
                     temp_targets_indices = torch.max(temp_targets, dim=1)[1]
+                    
+                    if b==0:
+                        pass
+                        # print( "FLAG 1", temp_predictions )
+                        # print(torch.max(temp_predictions, dim=1)[1].data, temp_targets_indices.data, "FLAG")
+                    
                     temp_loss = criterions[k](temp_predictions, temp_targets_indices)
                     loss['loss_' + stream + '_stream_' + k] = temp_loss
+                
                 continue
             
             for stream in streams:
+                
                 temp_predictions = predictions[stream][k][lower_index:upper_index, :]
+                temp_predictions = temp_predictions + 1e-20
+                
                 temp_targets = target[k][b, :curr_num_rel, :]
                 temp_loss = criterions[k](temp_predictions, temp_targets)
                 loss['loss_' + stream + '_stream_' + k] = temp_loss
+
+                if b == 0 and k == 'lr':
+                    temp_probabs = torch.sigmoid(temp_predictions.data[0, ...]).cpu()
+                    # loss_val = temp_loss.detach().cpu().numpy()
+                    loss_val_torch = criterions[k](temp_predictions[0, ...], temp_targets[0, ...] ).detach().cpu().numpy()
+                    loss_val_self = calc_bce( temp_probabs, temp_targets[0, ...])
+                    print(loss_val_torch, loss_val_self)
+                    # print( temp_probabs.numpy(), 1.0 * (temp_probabs > 0.5).numpy(), temp_targets.data[0, ...].cpu().numpy(), loss_val )
 
         lower_index = upper_index
     
@@ -378,14 +415,13 @@ def masked_loss_ican(predictions, target, criterions, config):
 
     keys = [ 'lr', 'mr', 'cr']
     
-    streams = config['streams']
-    # streams = ['visual', 'spatial']
+    # streams = config['streams']
+    streams = ['combined']
 
     b_size = target['lr'].shape[0]
     
     lower_index = 0
     upper_index = 0
-    
     
     for b in range(b_size):
         curr_num_rel = int(mask[b])
@@ -416,10 +452,10 @@ def masked_loss_ican(predictions, target, criterions, config):
     # adding all losses together
     for k in keys:
         for stream in streams:
+            loss['loss_' + stream + '_stream_' + k] /= (1.0 * b_size)
             loss['loss_total'] += loss['loss_' + stream + '_stream_' + k]
 
-    loss['loss_total']/=( 1.0 * len(keys))
-
+    loss['loss_total']/=( 1.0 * len(keys) * len(streams))
     return loss
 
 

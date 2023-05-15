@@ -2,9 +2,13 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 60
-lr: .001
-features_list: ['geometric_feature', 'object_2d_cnn_feature', 'object_i3d_feature', 'motion_feature']
+
+num_epochs: 175
+lr: .0003
+# features_list: ['geometric_feature', 'object_2d_cnn_feature', 'object_i3d_feature', 'motion_feature']
+features_list: ['object_2d_cnn_feature', 'object_i3d_feature']
+# features_list: ['geometric_feature', 'object_2d_cnn_feature']
+# features_list: ['object_2d_cnn_feature']
 
 
 # torch.Size([12, 11, 5]) geometric_feature
@@ -80,18 +84,18 @@ comments: 'None'
 wandb_project_name: 'ral_gpnn'
 wandb_entity: 'aunmesh'
 
-log_results: False
+log_results: True
 streams: ['combined']
 
 # model args for gpnn
 'edge_feature_size': 220
-'node_feature_size': 4106
+'node_feature_size': 4096
 'message_size': 256
 'link_hidden_size': 256 
-'link_hidden_layers': 2
+'link_hidden_layers': 1
 'link_relu': False
 'update_hidden_layers': 1
-'update_dropout': 0.0
+'update_dropout': 0.1
 'update_bias': True
-'propagate_layers': 3
+'propagate_layers': 1
 'resize_feature_to_message_size': True

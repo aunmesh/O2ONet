@@ -12,7 +12,6 @@ from model.nn_modules.relation_classifier import relation_classifier
 
 from utils.utils import aggregate
 
-
 class GPNN(torch.nn.Module):
 
     def __init__(self, config):
@@ -56,6 +55,7 @@ class GPNN(torch.nn.Module):
         scr_dropout = self.config['cr_dropout']
         self.cr_cls = relation_classifier(
             cr_dim, scr_dropout, self.config['device'], 1).double()
+        self.cr_softmax = torch.nn.Softmax(dim=-1)
 
         # creating the lr classifier
         lr_dim = self.config['lr_dimensions']
@@ -175,7 +175,9 @@ class GPNN(torch.nn.Module):
         final_embeddings = [hidden_node_states[batch_idx]
                             [-1].permute(0, 2, 1) for batch_idx in range(batch_size)]
         final_embeddings = torch.cat(final_embeddings, 0)
+        
         # print("DEBUG 6", final_embeddings.size())
+        
         num_pairs, classifier_input = self.make_classifier_inputs(
             final_embeddings,
             data_item['object_pairs']
@@ -186,11 +188,13 @@ class GPNN(torch.nn.Module):
         # Make the batch for features
         predictions['combined']['lr'] = self.lr_cls(num_pairs, classifier_input, 
                                                     batch_size)
-        predictions['combined']['cr'] = self.cr_cls(num_pairs, classifier_input, 
-                                                    batch_size)
+        
+        predictions['combined']['cr'] = self.cr_softmax( self.cr_cls(num_pairs, classifier_input, batch_size) )
+        
         predictions['combined']['mr'] = self.mr_cls(num_pairs, classifier_input, 
                                                     batch_size)
         predictions['combined']['adj_mat'] = pred_adj_mat
+
 
         return predictions
 

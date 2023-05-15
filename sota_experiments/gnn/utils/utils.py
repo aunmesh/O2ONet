@@ -9,7 +9,7 @@ def get_loss(output, target, criterions, config=None):
         loss['loss_total'] = criterions['action'](output['action_index_logit'], target['action_index'])
         return loss
     
-    if config['model_name'] == 'GPNN':
+    if config['model_name'] == 'GPNN' or config['model_name'] == 'GPNN_icra' or config['model_name'] == 'graph_rcnn':
         
         if config['loss'] == 'masked loss':
             return masked_loss_gpnn(output, target, criterions)
@@ -58,6 +58,10 @@ def config_loader(config_file_location):
     config = yaml.safe_load(f)
     f.close()
     config['device'] = torch.device(config['device'])
+    
+    if config['model_name'] == 'GPNN_icra':
+        num_frames = int(config['num_frames'])
+        config['edge_feature_size'] = 7 * num_frames
 
     return config
 
@@ -195,7 +199,7 @@ def process_data_for_fpass(data_item, config):
         data_item['action_index'] = data_item['action_index'].to(config['device'])
         return data_item
 
-    if config['model_name'] == 'ican':
+    if config['model_name'] == 'ican' or config['model_name'] == 'vsgnet' or config['model_name'] == 'drg':
         for k in data_item.keys():
             if k == 'metadata':
                 continue
@@ -203,22 +207,22 @@ def process_data_for_fpass(data_item, config):
         return data_item
    
    # obj_features, obj_pairs, slicing dictionary
-    if config['model_name'] == 'vsgnet' or config['model_name'] == 'drg':# or config['model_name'] == 'ican':
+    # if config['model_name'] == 'vsgnet' or config['model_name'] == 'drg':# or config['model_name'] == 'ican':
 
-        tensor_keys = ['num_obj', 'bboxes', 'lr', 'mr', 'cr', 'object_pairs']
-        tensor_keys+= ['num_relation', 'frame_deep_features']
+    #     tensor_keys = ['num_obj', 'bboxes', 'lr', 'mr', 'cr', 'object_pairs']
+    #     tensor_keys+= ['num_relation', 'frame_deep_features']
 
-        # temp0 = data_item['frame_deep_features'][:,5,:,:,:]
-        # temp1 = data_item['i3d_fmap'][:,:,:,:]
+    #     # temp0 = data_item['frame_deep_features'][:,5,:,:,:]
+    #     # temp1 = data_item['i3d_fmap'][:,:,:,:]
         
-        # data_item['frame_deep_features'] = torch.cat((temp0, temp1), dim=1)
+    #     # data_item['frame_deep_features'] = torch.cat((temp0, temp1), dim=1)
 
-        data_item['bboxes'] = data_item['bboxes'][:,:,5,:]
+    #     data_item['bboxes'] = data_item['bboxes'][:,:,5,:]
 
-        for k in tensor_keys:
-            data_item[k] = data_item[k].to(config['device']).float()
+    #     for k in tensor_keys:
+    #         data_item[k] = data_item[k].to(config['device']).float()
         
-        return data_item
+    #     return data_item
    
     # Pre-process the feature tensors
     
@@ -228,7 +232,7 @@ def process_data_for_fpass(data_item, config):
         # data_item['cnn_bbox_feature'] = data_item['object_2d_cnn_feature'][:,5,:,:]
 
 
-        data_item['num_relation'] = data_item['num_relation'].to(config['device'])
+        data_item['num_relation'] = data_item['num_pairs'].to(config['device'])
         data_item['num_obj'] = data_item['num_obj'].to(config['device'])
 
         data_item['object_pairs'] = data_item['object_pairs'].type(torch.long)
@@ -260,6 +264,69 @@ def process_data_for_fpass(data_item, config):
 
         data_item['concatenated_node_features'] = obj_features.to(config['device']).double()
         data_item['relative_spatial_feature'] = data_item['relative_spatial_feature'].flatten(3).to(config['device']).double()
+        
+        return data_item
+
+
+
+    if config['model_name'] == 'graph_rcnn':
+        
+            data_item['num_relation'] = data_item['num_pairs'].to(config['device'])
+            data_item['num_obj'] = data_item['num_obj'].to(config['device'])
+
+            data_item['object_pairs'] = data_item['object_pairs'].type(torch.long)
+            
+            data_item['lr'] = data_item['lr'].to(config['device'])
+            data_item['mr'] = data_item['mr'].to(config['device'])
+            data_item['cr'] = data_item['scr'].to(config['device'])
+
+            # Padded features
+            obj_features = [ data_item[f] for f in config['features_list'] ]           
+            obj_features = torch.cat(obj_features, 2)
+
+            data_item['concatenated_node_features'] = obj_features.to(config['device'])
+            temp_feature = data_item['relative_feature'].permute(0,2,3,1,4)
+            data_item['relative_spatial_feature'] = temp_feature.flatten(3).to(config['device'])
+            
+            return data_item
+
+
+
+    if config['model_name'] == 'GPNN_icra' :
+    
+        # data_item['i3d_feature'] = torch.mean(data_item['i3d_feature_map'], 1)
+        # data_item['cnn_bbox_feature'] = data_item['cnn_bbox_feature'][:,5,:,:]
+
+        data_item['num_relation'] = data_item['num_pairs'].to(config['device'])
+        data_item['num_obj'] = data_item['num_obj'].to(config['device'])
+
+        data_item['object_pairs'] = data_item['object_pairs'].type(torch.long)
+        
+        data_item['lr'] = data_item['lr'].to(config['device'])
+        data_item['mr'] = data_item['mr'].to(config['device'])
+        data_item['cr'] = data_item['scr'].to(config['device'])
+
+        # Padded features
+        obj_features = [ data_item[f] for f in config['features_list'] ]
+        obj_features = torch.cat(obj_features, 2)
+
+        data_item['concatenated_node_features'] = obj_features.to(config['device']).double()
+        
+        num_frames = config['num_frames']
+        assert num_frames in [1, 3, 5, 7, 9, 11], "num_frames not among [1, 3, 5, 7, 9, 11]"
+        offset = int( (num_frames - 1)/2 )
+        
+        # current 12,12,11,20 ; nenn - 11,8,8,7
+        #data_item['relative_spatial_feature'] = torch.einsum('b,f,i,j,l -> b,i,j,f,l', data_item['relative_feature'])
+        data_item['relative_spatial_feature'] = data_item['relative_feature'].permute(0,2,3,1,4)
+        
+        if offset == 0:
+            temp_spatial_feature = data_item['relative_spatial_feature'][:, :, :, 5:6, :]
+
+        if offset != 0:
+            temp_spatial_feature = data_item['relative_spatial_feature'][:, :, :, 5-offset:5+offset+1, :]
+
+        data_item['relative_spatial_feature'] = temp_spatial_feature.flatten(3).to(config['device']).double()
         
         return data_item
 
@@ -358,7 +425,6 @@ class loss_epoch_aggregator:
         self.count+=1
 
         if self.loss_aggregated == None:
-
             self.loss_aggregated = {}
             incoming_keys = loss_dict.keys()
 
@@ -366,12 +432,13 @@ class loss_epoch_aggregator:
                 self.loss_aggregated[self.stage + k] = loss_dict[k]
 
         else:
-            curr_keys = self.loss_aggregated.keys()
-            incoming_keys = loss_dict.keys()
+            curr_keys = list(self.loss_aggregated.keys())
+            incoming_keys = list(loss_dict.keys())
             
             for k in incoming_keys:
+                check_string = self.stage + k
                 
-                if k in curr_keys:
+                if check_string in curr_keys:
                     self.loss_aggregated[self.stage + k] += loss_dict[k]
                 
                 else:
@@ -387,8 +454,6 @@ class loss_epoch_aggregator:
     def reset(self):
         self.loss_aggregated = None
         self.stage = ''
-
-
 
 
 import torch

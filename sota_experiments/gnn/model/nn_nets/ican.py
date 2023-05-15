@@ -88,11 +88,6 @@ class iCAN(torch.nn.Module):
 
         return res_all_stream
 
-
-
-
-
-
 class iCAN_v2(torch.nn.Module):
 
     def __init__(self, config):

@@ -19,7 +19,6 @@ def val( model, val_loader, config, criterions, metric_tracker):
     # Collect the metrics for each batch
     # Average the metrics
     # return a result_dict
-
     ### set model to eval mode
     model = model.eval()
    
@@ -46,7 +45,6 @@ def val( model, val_loader, config, criterions, metric_tracker):
         
         ### Calculating metrics for this particular pass
         step_results = metric_tracker.calc_metrics(output_dict, d_item)
-        break
         
     ### Get the average metric for the entire run
     metric_dict = metric_tracker.aggregate_metrics()
@@ -58,6 +56,5 @@ def val( model, val_loader, config, criterions, metric_tracker):
     ### Get the output dictionary for the validation run and reset for next run
     val_result = {**loss_epoch, **metric_dict}
     metric_tracker.reset_metrics()
-
     model = model.train()
     return val_result

@@ -16,11 +16,10 @@ class DRG(torch.nn.Module):
         self.config = config.copy()
         
         self.graphical_branch = GraphicalBranch_drg(self.config)
-        self.object_branch = ObjectBranch_drg(self.config)
+        # self.object_branch = ObjectBranch_drg(self.config)
         self.spatial_branch = SpatialBranch_drg(self.config)
         
         self.graphical_branch_classifiers = {}
-        self.object_branch_classifiers = {}
 
         self.relation_keys = ['lr', 'mr', 'cr']
 
@@ -29,8 +28,8 @@ class DRG(torch.nn.Module):
             temp_dimension = self.config['graphical_branch_' + k + '_classifier_dimension']
             self.graphical_branch_classifiers[k] = self.make_classifier(temp_dimension, k)
             
-            temp_dimension = self.config['object_branch_' + k + '_classifier_dimension']
-            self.object_branch_classifiers[k] = self.make_classifier(temp_dimension, k)
+            # temp_dimension = self.config['object_branch_' + k + '_classifier_dimension']
+            # self.object_branch_classifiers[k] = self.make_classifier(temp_dimension, k)
 
 
 
@@ -48,48 +47,51 @@ class DRG(torch.nn.Module):
                 classifier_layers.append(nn.ReLU())
         
         if key == 'cr':
-            classifier_layers.append( nn.Softmax(dim=1) )
+            # classifier_layers.append( nn.Softmax(dim=1) )
+            classifier_layers.append( nn.LogSoftmax(dim=1) )
         
-        else:
-            classifier_layers.append( nn.Sigmoid() )
-        
+        # else:
+        #     classifier_layers.append( nn.Sigmoid() )
         model = nn.Sequential(*classifier_layers).to(self.config['device'])
 
         return model
 
 
-
     def forward(self, data_item):
 
-
-        object_branch_output_paired = self.object_branch(data_item)
+        # object_branch_output_paired = self.object_branch(data_item)
         spatial_feature_map, spatial_slicing_tensor = self.spatial_branch(data_item)
         graphical_branch_output_paired = self.graphical_branch(
                                                                 data_item, 
                                                                 spatial_feature_map,
                                                                 spatial_slicing_tensor
                                                                )
-        
-        # classify using the features
 
+        # classify using the features
         res_graphical = {}
         for k in self.relation_keys:
             res_graphical[k] = self.graphical_branch_classifiers[k](
                                             graphical_branch_output_paired
                                                                     )
 
-        res_object = {}
-        for k in self.relation_keys:
-            res_object[k] = self.object_branch_classifiers[k](object_branch_output_paired)
+        # res_object = {}
+        # for k in self.relation_keys:
+        #     res_object[k] = self.object_branch_classifiers[k](object_branch_output_paired)
 
         
-        res_combined = {}
-        for k in self.relation_keys:
-            res_combined[k] = res_object[k] * res_graphical[k]
-        
+        # res_combined = {}
+        # for k in self.relation_keys:
+        #     res_combined[k] = res_object[k] * res_graphical[k]
+
+        # res_combined = {}
+        # for k in self.relation_keys:
+        #     res_combined[k] = res_graphical[k]
+
+        res_combined = res_graphical
+                
         res_all_stream = {}
-        res_all_stream['graphical'] = res_graphical
-        res_all_stream['object'] = res_object
+        # res_all_stream['graphical'] = res_graphical
+        # res_all_stream['object'] = res_object
         res_all_stream['combined'] = res_combined
         
         return res_all_stream

@@ -49,7 +49,6 @@ class dataset(Dataset):
         temp_iou = data_item['iou'][:temp_num_obj, :temp_num_obj, central_frame_index]
         temp_dis = data_item['distance'][:temp_num_obj, :temp_num_obj, central_frame_index]
         
-        
         # Matrix to be used for deciding edges between the nodes
         temp_mat = (temp_iou > t_iou) + (temp_dis < t_dis)
         temp_index = torch.where(temp_mat)
@@ -77,4 +76,5 @@ class dataset(Dataset):
 
     def __getitem__(self, idx):
 
-        return self.modify_dataitem(idx), idx
+        # return self.modify_dataitem(idx), idx
+        return self.dataset[idx], idx

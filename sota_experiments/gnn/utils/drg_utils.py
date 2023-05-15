@@ -104,10 +104,13 @@ def get_sp(object_box_1, object_box_2, device):
     
     InteractionPattern = [min(object_box_1[0], object_box_2[0]), min(object_box_1[1], object_box_2[1]), 
                           max(object_box_1[2], object_box_2[2]), max(object_box_1[3], object_box_2[3])]
+
     height = InteractionPattern[3] - InteractionPattern[1] + 1
     width = InteractionPattern[2] - InteractionPattern[0] + 1
+    
     if height > width:
         H, O = bbox_trans(object_box_1, object_box_2, 'height')
+    
     else:
         H, O  = bbox_trans(object_box_1, object_box_2, 'width')
     
