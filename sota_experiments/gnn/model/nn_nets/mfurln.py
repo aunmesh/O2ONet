@@ -32,14 +32,16 @@ class mfurln(torch.nn.Module):
         # Hyperparameters to process node embeddings for classification
         self.agg = self.config['aggregator']
         
-        self.label_locating_matrix = -1 * torch.ones(8, 8, dtype=torch.int, 
+        self.label_locating_matrix = -1 * torch.ones(8, 8, dtype=torch.long, 
                                                  device=self.config['device']
                                                 )
         curr_pos = 0
         for i in range(8):
-            for j in range(i, 8):
+            for j in range(i+1, 8):
                 self.label_locating_matrix[i,j] = curr_pos
                 self.label_locating_matrix[j,i] = curr_pos
+                curr_pos+=1
+        print(self.label_locating_matrix)
 
 
     def make_linear_layer(self, dimensions):
@@ -113,7 +115,7 @@ class mfurln(torch.nn.Module):
             curr_index = 0
             
             for i in range(curr_num_obj):
-                for j in range(i,curr_num_obj):
+                for j in range(i+1,curr_num_obj):
                     
                     node_feat_1 = data_item['concatenated_node_features'][b, i]
                     node_feat_2 = data_item['concatenated_node_features'][b, j]
@@ -196,23 +198,25 @@ class mfurln(torch.nn.Module):
         pos_features = torch.zeros((batch_size,num_pairs, req_dim), device=self.config['device'])
         pairs = data_item['object_pairs']
         
-        total_num_pos_relation = torch.sum(batch_size['num_relation'])
+        total_num_pos_relation = torch.sum(data_item['num_relation'])
         total_num_neg_relation = 28*batch_size - total_num_pos_relation
         
-        neg_features = torch.zeros((total_num_neg_relation, req_dim), device=self.config['dim'])
+        neg_features = torch.zeros((total_num_neg_relation, req_dim), device=self.config['device'])
         
         lower_neg=0
         all_locs = [i for i in range(28)]
         for b in range(batch_size):
             pos_locs = []
-            for i in range(num_pairs):
+            temp_num_pairs = int(data_item['num_relation'][b])
+            for i in range(temp_num_pairs):
 
                 ind0, ind1 = pairs[b, i, 0], pairs[b, i, 1]
-                loc = self.label_locating_matrix[ind0, ind1]
+                loc = int(self.label_locating_matrix[ind0, ind1].item())
                 pos_locs.append(loc)
                 emb = concatenated_features[b, loc]
                 pos_features[b, i, :] = emb
             
+            print(len(all_locs), len(pos_locs), pos_locs)
             temp_neg_locs = list(set(all_locs)-set(pos_locs))
             num_neg = len(temp_neg_locs)
             temp_neg_locs = torch.tensor(temp_neg_locs)
