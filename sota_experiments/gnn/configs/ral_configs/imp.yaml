@@ -2,7 +2,7 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 6
+num_epochs: 7
 lr: .001
 features_list: ["geometric_feature","appearance_feature","i3d_feature","motion_feature"]
 
@@ -13,29 +13,20 @@ save_epoch: 5
 
 loss: 'masked loss'
 
-model_name: 'graph_rcnn'
-GNN: 'GATv2Conv'
-# GNN: 'GATv2Conv'
+model_name: 'imp'
 
 
 overfit: False
 
 model_saving_path: '/workspace/work/results_ICRA_gpnn/'
 
-# Neural Network dimensions
-rel_pn_dimensions : [4206, 256]
-
-#gnn_dimensions: [4206, 512, 256, 128, 64]
-gnn_dimensions: [512, 256] #, 128, 64, 32]
-gnn_dropout : 0.15
-
-cr_dimensions : [512, 3]
+cr_dimensions : [256, 3]
 cr_dropout : 0.15
 
-lr_dimensions : [512, 5]
+lr_dimensions : [256, 5]
 lr_dropout : 0.15
 
-mr_dimensions : [512, 14]
+mr_dimensions : [256, 14]
 mr_dropout : 0.15
 aggregator : 'mean'
 
@@ -62,7 +53,7 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ral_graph_rcnn'
+wandb_project_name: 'ral_imp'
 wandb_entity: 'aunmesh'
 
 log_results: True

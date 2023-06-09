@@ -5,7 +5,7 @@ from utils.utils import get_gnn
 
 class GNN(nn.Module):
 
-    def __init__(self, config):
+    def __init__(self, config, key=''):
         '''
         creates a graph neural network
         dimensions are a list for [input dimension, hidden....hidden, output dimension]
@@ -16,8 +16,8 @@ class GNN(nn.Module):
 
         self.config = config
         self.gc_layers = nn.ModuleList()  # for storing all the Graph Convolution Layers
-        self.dimensions = self.config['gnn_dimensions']
-        self.dropout = self.config['gnn_dropout']
+        self.dimensions = self.config[key + 'gnn_dimensions']
+        self.dropout = self.config[key + 'gnn_dropout']
         
 
         for i in range(len(self.dimensions) - 1):

@@ -20,12 +20,15 @@ class mfurln(torch.nn.Module):
         self.config = config.copy()      
         self.classifier_input_dimension = self.config['node_gnn_dimensions'][-1]
         
-        self.indeterminate_fc_1 = self.make_linear_layer([4206+77, 512])
-        self.indeterminate_fc_2 = self.make_linear_layer([512, 1])
+        h_size = 128
+        self.indeterminate_fc_1 = self.make_linear_layer([4206+77, h_size])
+        self.indeterminate_fc_2 = self.make_linear_layer([h_size, 1])
         
-        self.cr_cls = self.make_linear_layer([4206+512, 3])
-        self.lr_cls = self.make_linear_layer([4206+512, 5])
-        self.mr_cls = self.make_linear_layer([4206+512, 14])
+        h_size_2 = 512
+        self.relationdet_fc_1 = self.make_linear_layer([4206+77+h_size, h_size_2])
+        self.cr_cls = self.make_linear_layer([h_size_2, 3])
+        self.lr_cls = self.make_linear_layer([h_size_2, 5])
+        self.mr_cls = self.make_linear_layer([h_size_2, 14])
         
         self.cr_softmax = torch.nn.Softmax(dim=-1)
 
@@ -41,7 +44,6 @@ class mfurln(torch.nn.Module):
                 self.label_locating_matrix[i,j] = curr_pos
                 self.label_locating_matrix[j,i] = curr_pos
                 curr_pos+=1
-        print(self.label_locating_matrix)
 
 
     def make_linear_layer(self, dimensions):
@@ -137,8 +139,6 @@ class mfurln(torch.nn.Module):
             label_tensor[b, pos_indices] = 1
         return feature_matrix, label_tensor
                     
-                        
-                    
         
     def forward(self, data_item):
         """
@@ -168,10 +168,10 @@ class mfurln(torch.nn.Module):
         feature_matrix, label_tensor = self.make_all_pairs(data_item)
         
         indeterminate_1 = self.indeterminate_fc_1(feature_matrix)
-        indeterminate_output = torch.sigmoid(self.indeterminate_fc_2(indeterminate_1))
+        indeterminate_output = torch.sigmoid(self.indeterminate_fc_2(indeterminate_1)).squeeze()
         
         concatenated_features = torch.cat([feature_matrix, indeterminate_1], dim=-1)
-        
+        concatenated_features = self.relationdet_fc_1(concatenated_features)
         pos_features, neg_features = self.separate_the_feats(concatenated_features, data_item)
         
         
@@ -180,13 +180,20 @@ class mfurln(torch.nn.Module):
         # One without annotated outputs
 
         predictions = {}
+        predictions['indeterminate_out'] = indeterminate_output
+        predictions['label_tensor'] = label_tensor
+        
         predictions['combined'] = {}
 
         # Make the batch for features
         predictions['combined']['lr'] = self.lr_cls(pos_features)
-        predictions['combined']['cr'] = self.cr_cls(pos_features)
+        predictions['combined']['cr'] = self.cr_softmax(self.cr_cls(pos_features))
         predictions['combined']['mr'] = self.mr_cls(pos_features)
-
+        
+        predictions['lr_neg'] = self.lr_cls(neg_features)
+        predictions['cr_neg'] = self.cr_softmax(self.cr_cls(neg_features))
+        predictions['mr_neg'] = self.mr_cls(neg_features)
+        
         return predictions
     
     def separate_the_feats(self, concatenated_features, data_item):
@@ -216,7 +223,6 @@ class mfurln(torch.nn.Module):
                 emb = concatenated_features[b, loc]
                 pos_features[b, i, :] = emb
             
-            print(len(all_locs), len(pos_locs), pos_locs)
             temp_neg_locs = list(set(all_locs)-set(pos_locs))
             num_neg = len(temp_neg_locs)
             temp_neg_locs = torch.tensor(temp_neg_locs)

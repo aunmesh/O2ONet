@@ -355,5 +355,5 @@ class graph_rcnn(torch.nn.Module):
         predictions['combined']['cr'] = self.cr_softmax( self.cr_cls(classifier_input) )
         
         predictions['combined']['mr'] = self.mr_cls(classifier_input)
-
+        predictions['rel_proposal'] = relatedness_score
         return predictions

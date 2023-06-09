@@ -13,7 +13,7 @@ save_epoch: 5
 
 loss: 'masked loss'
 
-model_name: 'graph_rcnn'
+model_name: 'hgat'
 GNN: 'GATv2Conv'
 # GNN: 'GATv2Conv'
 
@@ -23,11 +23,12 @@ overfit: False
 model_saving_path: '/workspace/work/results_ICRA_gpnn/'
 
 # Neural Network dimensions
-rel_pn_dimensions : [4206, 256]
+node_gnn_dimensions: [4206, 256]
+node_gnn_dropout : 0.15
 
-#gnn_dimensions: [4206, 512, 256, 128, 64]
-gnn_dimensions: [512, 256] #, 128, 64, 32]
-gnn_dropout : 0.15
+triplet_gnn_dimensions: [77, 256]
+triplet_gnn_dropout : 0.15
+
 
 cr_dimensions : [512, 3]
 cr_dropout : 0.15
@@ -62,7 +63,7 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ral_graph_rcnn'
+wandb_project_name: 'ral_hgat'
 wandb_entity: 'aunmesh'
 
 log_results: True

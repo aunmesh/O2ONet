@@ -44,7 +44,7 @@ def construct_criterions(config):
         
         return criterions
 
-    if config['model_name'] == 'GPNN_icra' or config['model_name'] == 'graph_rcnn':
+    if config['model_name'] == 'GPNN_icra' or config['model_name'] == 'graph_rcnn' or config['model_name'] == 'hgat':
         
         criterions = {}
         
@@ -53,6 +53,18 @@ def construct_criterions(config):
         criterions['mr'] = nn.BCEWithLogitsLoss().to(config['device'])
         
         return criterions
+
+    if config['model_name'] == 'mfurln' or config['model_name'] == 'imp':
+        
+        criterions = {}
+        
+        criterions['cr'] = nn.CrossEntropyLoss().to(config['device'])
+        criterions['lr'] = nn.BCEWithLogitsLoss().to(config['device'])
+        criterions['mr'] = nn.BCEWithLogitsLoss().to(config['device'])
+        
+        return criterions
+
+
 
     if config['model_name'] == 'drg':
         
@@ -94,11 +106,27 @@ def get_metric_trackers(config):
         
 
 from model.nn_nets.graph_rcnn import graph_rcnn
+from model.nn_nets.hgat import hgat
+from model.nn_nets.mfurln import mfurln
+from model.nn_nets.imp import imp
 
 def get_model(config):
 
     if config['model_name'] == 'graph_rcnn':
         model = graph_rcnn(config).to(config['device'])
+        return model
+
+    if config['model_name'] == 'mfurln':
+        model = mfurln(config).to(config['device'])
+        return model
+
+    if config['model_name'] == 'imp':
+        model = imp(config).to(config['device'])
+        return model
+
+
+    if config['model_name'] == 'hgat':
+        model = hgat(config).to(config['device'])
         return model
 
     if config['model_name'] == 'action_recog_test':

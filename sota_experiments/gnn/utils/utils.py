@@ -9,7 +9,7 @@ def get_loss(output, target, criterions, config=None):
         loss['loss_total'] = criterions['action'](output['action_index_logit'], target['action_index'])
         return loss
     
-    if config['model_name'] == 'GPNN' or config['model_name'] == 'GPNN_icra' or config['model_name'] == 'graph_rcnn':
+    if config['model_name'] == 'GPNN' or config['model_name'] == 'GPNN_icra' or config['model_name'] == 'hgat' or config['model_name'] == 'imp':
         
         if config['loss'] == 'masked loss':
             return masked_loss_gpnn(output, target, criterions)
@@ -20,6 +20,25 @@ def get_loss(output, target, criterions, config=None):
                                                     criterions, 
                                                     config['pcp_hyperparameter']
                                                     )
+
+
+    if config['model_name'] == 'mfurln':
+        
+        if config['loss'] == 'masked loss':
+            return masked_loss_mfurln(output, target, criterions)
+        
+        if config['loss'] == 'masked loss with positive label encouragement':
+            return masked_loss_encouraging_positive(
+                                                    output, target, 
+                                                    criterions, 
+                                                    config['pcp_hyperparameter']
+                                                    )
+
+
+        
+    if config['model_name'] == 'graph_rcnn':
+        return masked_loss_graph_rcnn(output, target, criterions)
+        
         
     if config['loss_calculation'] == 'masked loss vsgnet':
         return masked_loss_vsgnet(output, target, criterions)
@@ -269,7 +288,7 @@ def process_data_for_fpass(data_item, config):
 
 
 
-    if config['model_name'] == 'graph_rcnn':
+    if config['model_name'] == 'graph_rcnn' or config['model_name'] == 'hgat' or config['model_name'] == 'mfurln':
         
             data_item['num_relation'] = data_item['num_pairs'].to(config['device'])
             data_item['num_obj'] = data_item['num_obj'].to(config['device'])
@@ -290,6 +309,27 @@ def process_data_for_fpass(data_item, config):
             
             return data_item
 
+
+    if config['model_name'] == 'imp':
+        
+            data_item['num_relation'] = data_item['num_pairs'].to(config['device'])
+            data_item['num_obj'] = data_item['num_obj'].to(config['device'])
+
+            data_item['object_pairs'] = data_item['object_pairs'].type(torch.long)
+            
+            data_item['lr'] = data_item['lr'].to(config['device'])
+            data_item['mr'] = data_item['mr'].to(config['device'])
+            data_item['cr'] = data_item['scr'].to(config['device'])
+
+            # Padded features
+            obj_features = [ data_item[f] for f in config['features_list'] ]           
+            obj_features = torch.cat(obj_features, 2)
+
+            data_item['concatenated_node_features'] = obj_features.to(config['device'])
+            temp_feature = data_item['relative_feature'].permute(0,2,3,1,4)
+            data_item['relative_spatial_feature'] = temp_feature.flatten(3).to(config['device'])
+            
+            return data_item
 
 
     if config['model_name'] == 'GPNN_icra' :
@@ -483,9 +523,13 @@ def collate_node_features(obj_features, num_objects, device):
 
 def collate_edge_indices(edge_index, num_edges, num_objects, device):
 
-    total_edges = torch.sum(num_edges)
-    res = torch.zeros((2, total_edges), dtype = edge_index.dtype, device=device)
-
+    try:
+        total_edges = torch.sum(num_edges)
+        res = torch.zeros((2, total_edges), dtype = edge_index.dtype, device=device)
+    except:
+        total_edges = int(torch.sum(num_edges).item())
+        res = torch.zeros((2, total_edges), dtype = edge_index.dtype, device=device)
+        
     b_size = int(edge_index.shape[0])
 
     curr_index = 0
@@ -515,7 +559,7 @@ def decollate_node_embeddings(all_node_embeddings, node_slicing, device, pad_len
     b_size = int(node_slicing[-1]+1)
     
     result = torch.zeros((b_size, pad_len, dim_embedding), dtype=all_node_embeddings.dtype, device=device)
-    
+      
     for i in range(b_size):
         curr_obj = i
         

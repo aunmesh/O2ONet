@@ -65,7 +65,7 @@ class hgat(torch.nn.Module):
         return model
 
 
-    def make_classifier_inputs(self, node_embeddings, pairs):
+    def make_classifier_inputs(self, node_embeddings, triplet_embeddings, pairs):
         '''
         makes the classifier input from the node embeddings and pairs
 
@@ -89,7 +89,7 @@ class hgat(torch.nn.Module):
         # classifier_input is the tensor which will be passed to the fully connected classifier
         # for feature classification
         classifier_input = torch.empty(
-            num_batches, num_pairs, self.classifier_input_dimension, device=self.config['device'])
+            num_batches, num_pairs, 2*self.classifier_input_dimension, device=self.config['device'])
 
         for b in range(num_batches):
 
@@ -98,7 +98,10 @@ class hgat(torch.nn.Module):
                 ind0, ind1 = pairs[b, i, 0], pairs[b, i, 1]
 
                 emb0, emb1 = node_embeddings[b, ind0], node_embeddings[b, ind1]
-                classifier_input[b, i] = aggregate(emb0, emb1, self.agg)
+                classifier_input[b, i, :self.classifier_input_dimension] = aggregate(emb0, emb1, self.agg)
+                
+                triplet_embedding = triplet_embeddings[b, i]
+                classifier_input[b,i, self.classifier_input_dimension:] = triplet_embedding
 
         return classifier_input
 
@@ -199,27 +202,23 @@ class hgat(torch.nn.Module):
                                                   collated_triplet_edge_index)
         
 
-        print("DEBUG", all_triplet_embeddings.shape, triplet_slicing.shape)
+        
 
         triplet_embeddings = decollate_node_embeddings(all_triplet_embeddings, 
                                                    triplet_slicing, self.config['device']
                                                    ,pad_len=250)
 
-        
-        
-        
-
-        # num_pairs, classifier_input = self.make_classifier_inputs(
-        #     obj_embeddings, data_item['object_pairs'])
-
-        num_batches = obj_embeddings.shape[0]
+        classifier_input = self.make_classifier_inputs(obj_embeddings, 
+                                                                  triplet_embeddings,
+                                                                  data_item['object_pairs'])
 
         predictions = {}
+        predictions['combined'] = {}
 
         # Make the batch for features
-        predictions['lr'] = self.lr_cls(num_pairs, classifier_input, num_batches)
-        predictions['cr'] = self.cr_cls(num_pairs, classifier_input, num_batches)
-        predictions['mr'] = self.mr_cls(num_pairs, classifier_input, num_batches)
+        predictions['combined']['lr'] = self.lr_cls(classifier_input)
+        predictions['combined']['cr'] = self.cr_softmax(self.cr_cls(classifier_input))
+        predictions['combined']['mr'] = self.mr_cls(classifier_input)
 
         return predictions
 
