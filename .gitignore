@@ -2,3 +2,5 @@
 */*/wandb
 *core*
 *wand*
+*.pkl
+*.json
