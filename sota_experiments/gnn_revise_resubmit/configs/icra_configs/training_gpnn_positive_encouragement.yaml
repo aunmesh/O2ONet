@@ -1,0 +1,72 @@
+train_batch_size: 32
+val_batch_size: 206
+test_batch_size: 203
+
+num_epochs: 200
+lr: .001
+features_list: ['central_frame_geometric_feature', 'cnn_bbox_feature', 'i3d_feature', 'central_frame_motion_feature']
+
+optimizer: 'Adam'
+
+loss: 'masked loss with positive label encouragement'
+pcp_hyperparameter: 0.0001
+
+# After how many epochs to save the model
+save_epoch: 5
+
+model_name: 'GPNN'
+GNN: 'GPNN'
+overfit: False
+
+model_saving_path: '/workspace/work/results_ICRA_gpnn/'
+
+# Neural Network dimensions
+cr_dimensions : [256, 3]
+cr_dropout : 0.15
+
+lr_dimensions : [256, 5]
+lr_dropout : 0.15
+
+mr_dimensions : [256, 14]
+mr_dropout : 0.15
+aggregator : 'mean'
+
+# field to distinguish from different datasets (depending on gif length)
+dataset_description: 'ooi_dataset'
+
+# root folder of the dataset
+dataset_root: '/workspace/data/data_folder/o2o/all_features/gifs_11'
+
+# relative location of the annotations file
+train_annotations: 'train.pkl'
+val_annotations: 'val.pkl'
+test_annotations: 'test.pkl'
+device: 'cuda:2'
+
+iou_threshold: 0.5
+dis_threshold: 0.5
+max_num_edges: 144
+
+gif_size: 11
+
+loss_calculation: 'masked'
+comments: 'None'
+
+# wandb_configs
+wandb_project_name: 'ooi_icra_gpnn'
+wandb_entity: 'aunmesh'
+
+log_results: True
+
+# model args for gpnn
+'edge_feature_size': 220
+'node_feature_size': 1098
+'message_size': 256
+'link_hidden_size': 256 
+'link_hidden_layers': 2
+'link_relu': False
+'update_hidden_layers': 1
+'update_dropout': 0.0
+'update_bias': True
+'propagate_layers': 3
+'resize_feature_to_message_size': True

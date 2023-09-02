@@ -1,0 +1,71 @@
+train_batch_size: 32
+val_batch_size: 32
+test_batch_size: 32
+
+num_epochs: 6
+lr: .001
+features_list: ["geometric_feature","appearance_feature","i3d_feature","motion_feature"]
+
+optimizer: 'Adam'
+
+# After how many epochs to save the model
+save_epoch: 5
+
+loss: 'masked loss'
+
+model_name: 'graph_rcnn'
+GNN: 'GATv2Conv'
+# GNN: 'GATv2Conv'
+
+
+overfit: False
+
+model_saving_path: '/workspace/work/results_ICRA_gpnn/'
+
+# Neural Network dimensions
+rel_pn_dimensions : [4206, 256]
+
+#gnn_dimensions: [4206, 512, 256, 128, 64]
+gnn_dimensions: [512, 256] #, 128, 64, 32]
+gnn_dropout : 0.15
+
+cr_dimensions : [512, 3]
+cr_dropout : 0.15
+
+lr_dimensions : [512, 5]
+lr_dropout : 0.15
+
+mr_dimensions : [512, 14]
+mr_dropout : 0.15
+aggregator : 'mean'
+
+# field to distinguish from different datasets (depending on gif length)
+dataset_description: 'gpnn_icra_dataset'  # same as nenn dataset
+device: 'cuda:1'
+
+# root folder of the dataset
+dataset_root: '/workspace/work/misc/icra_nenn/nenn_cleaned/data/'
+
+# relative location of the annotations file
+train_annotations: 'training_nenn.pkl'
+val_annotations: 'validation_nenn.pkl'
+test_annotations: 'testing_nenn.pkl'
+
+
+iou_threshold: 0.5
+dis_threshold: 0.5
+max_num_edges: 144
+
+gif_size: 11
+
+loss_calculation: 'masked'
+comments: 'None'
+
+# wandb_configs
+wandb_project_name: 'ral_graph_rcnn'
+wandb_entity: 'aunmesh'
+
+log_results: True
+streams: ['combined']
+
+best_model_selection_key: 'val_combined_mAP_all'

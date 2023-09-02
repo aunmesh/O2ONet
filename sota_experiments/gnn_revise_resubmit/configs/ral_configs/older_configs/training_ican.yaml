@@ -1,0 +1,68 @@
+train_batch_size: 32
+val_batch_size: 32
+test_batch_size: 32
+
+num_epochs: 80
+lr: .0005
+
+optimizer: 'Adam'
+
+# After how many epochs to save the model
+save_epoch: 1
+
+model_name: 'ican'
+
+best_model_selection_key : 'val_combined_mAP_all'
+
+overfit: False
+
+model_saving_path: '/workspace/work/results_ICRA_ican/'
+
+aggregator : 'mean'
+
+# field to distinguish from different datasets (depending on gif length)
+dataset_description: 'ican_dataset'
+
+# root folder of the dataset
+dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/ican'
+split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
+
+# relative location of the annotations file
+device: 'cuda:2'
+
+gif_size: 11
+
+loss_calculation: 'masked loss ican'
+comments: 'None'
+
+# wandb_configs
+wandb_project_name: 'ral_submission_ican'
+wandb_entity: 'aunmesh'
+
+log_results: True
+
+streams: ['visual', 'spatial', 'combined']
+# streams: ['combined']
+
+roi_pool_size: [7, 7]
+spatial_scale: 1
+sampling_ratio: 1
+
+# Neural Network dimensions
+lin_obj_dim : [1024, 1024]
+
+spatial_branch_cr_classifier_dimension : [512, 3]
+spatial_branch_lr_classifier_dimension : [512, 5]
+spatial_branch_mr_classifier_dimension : [512, 14]
+
+visual_branch_cr_classifier_dimension : [1024, 3]
+visual_branch_lr_classifier_dimension : [1024, 5]
+visual_branch_mr_classifier_dimension : [1024, 14]
+
+# combined_branch_cr_classifier_dimension : [512, 3]
+# combined_branch_lr_classifier_dimension : [512, 5]
+# combined_branch_mr_classifier_dimension : [512, 14]
+
+# combined_branch_cr_classifier_dimension : [1536, 3]
+# combined_branch_lr_classifier_dimension : [1536, 5]
+# combined_branch_mr_classifier_dimension : [1536, 14]

@@ -1,0 +1,101 @@
+train_batch_size: 32
+val_batch_size: 32
+test_batch_size: 32
+
+
+num_epochs: 175
+lr: .0003
+# features_list: ['geometric_feature', 'object_2d_cnn_feature', 'object_i3d_feature', 'motion_feature']
+features_list: ['object_2d_cnn_feature', 'object_i3d_feature']
+# features_list: ['geometric_feature', 'object_2d_cnn_feature']
+# features_list: ['object_2d_cnn_feature']
+
+
+# torch.Size([12, 11, 5]) geometric_feature
+# torch.Size([11, 12, 2048]) object_2d_cnn_feature
+# torch.Size([5, 12, 2048]) object_i3d_feature
+# torch.Size([12, 11, 5]) motion_feature
+
+best_model_selection_key : 'val_combined_mAP_all'
+
+custom_filter_dict:
+
+    'geometric_feature':
+      frame_dim : 1
+      frame_index : 5
+
+    'object_2d_cnn_feature':
+      frame_dim : 0
+      frame_index : 5
+
+    'object_i3d_feature':
+      frame_dim : 0
+      frame_index : 2
+
+    'motion_feature':
+      frame_dim : 1
+      frame_index : 5
+
+optimizer: 'Adam'
+
+# After how many epochs to save the model
+save_epoch: 5
+
+loss: 'masked loss'
+
+model_name: 'GPNN'
+GNN: 'GPNN'
+overfit: False
+
+model_saving_path: '/workspace/work/ral_gpnn/'
+
+# Neural Network dimensions
+cr_dimensions : [256, 3]
+cr_dropout : 0.15
+
+lr_dimensions : [256, 5]
+lr_dropout : 0.15
+
+mr_dimensions : [256, 14]
+mr_dropout : 0.15
+aggregator : 'mean'
+
+# field to distinguish from different datasets (depending on gif length)
+dataset_description: 'gpnn_dataset'
+
+# root folder of the dataset
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/gpnn/gpnn_feats.pkl'
+split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
+
+# relative location of the annotations file
+
+device: 'cuda:1'
+
+iou_threshold: 0.5
+dis_threshold: 0.5
+max_num_edges: 144
+
+gif_size: 11
+
+loss_calculation: 'masked'
+comments: 'None'
+
+# wandb_configs
+wandb_project_name: 'ral_gpnn'
+wandb_entity: 'aunmesh'
+
+log_results: True
+streams: ['combined']
+
+# model args for gpnn
+'edge_feature_size': 220
+'node_feature_size': 4096
+'message_size': 256
+'link_hidden_size': 256 
+'link_hidden_layers': 1
+'link_relu': False
+'update_hidden_layers': 1
+'update_dropout': 0.1
+'update_bias': True
+'propagate_layers': 1
+'resize_feature_to_message_size': True

@@ -1,0 +1,77 @@
+train_batch_size: 32
+val_batch_size: 32
+test_batch_size: 32
+
+num_epochs: 7
+lr: .001
+features_list: ["geometric_feature","appearance_feature","i3d_feature","motion_feature"]
+
+optimizer: 'Adam'
+
+# After how many epochs to save the model
+save_epoch: 5
+
+loss: 'masked loss'
+
+model_name: 'GPNN_icra'
+GNN: 'GPNN'
+overfit: False
+
+model_saving_path: '/workspace/work/results_ICRA_gpnn/'
+
+# Neural Network dimensions
+cr_dimensions : [256, 3]
+cr_dropout : 0.15
+
+lr_dimensions : [256, 5]
+lr_dropout : 0.15
+
+mr_dimensions : [256, 14]
+mr_dropout : 0.15
+aggregator : 'mean'
+
+# field to distinguish from different datasets (depending on gif length)
+dataset_description: 'gpnn_icra_dataset'
+device: 'cuda:2'
+
+# root folder of the dataset
+dataset_root: '/workspace/work/misc/icra_nenn/nenn_cleaned/data/'
+
+# relative location of the annotations file
+train_annotations: 'training_nenn.pkl'
+val_annotations: 'validation_nenn.pkl'
+test_annotations: 'testing_nenn.pkl'
+
+
+iou_threshold: 0.5
+dis_threshold: 0.5
+max_num_edges: 144
+
+gif_size: 11
+
+loss_calculation: 'masked'
+comments: 'None'
+
+# wandb_configs
+wandb_project_name: 'gpnn_num_frames_ablation_3'
+wandb_entity: 'aunmesh'
+
+log_results: True
+streams: ['combined']
+
+# model args for gpnn
+'edge_feature_size': 77
+'node_feature_size': 4206
+'message_size': 256
+'link_hidden_size': 256 
+'link_hidden_layers': 2
+'link_relu': False
+'update_hidden_layers': 1
+'update_dropout': 0.0
+'update_bias': True
+'propagate_layers': 3
+'resize_feature_to_message_size': True
+
+best_model_selection_key: 'val_combined_mAP_all'
+
+num_frames: 11
