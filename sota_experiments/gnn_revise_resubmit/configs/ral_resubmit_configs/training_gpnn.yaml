@@ -2,7 +2,7 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 175
+num_epochs: 25
 lr: .0003
 
 features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
@@ -60,7 +60,7 @@ aggregator : 'mean'
 dataset_description: 'gpnn_dataset'
 
 # root folder of the dataset
-full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v2_sliced.pkl'
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v2.pkl'
 split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
 
 # relative location of the annotations file
@@ -77,15 +77,15 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ral_gpnn'
+wandb_project_name: 'resubmit_gpnn'
 wandb_entity: 'aunmesh'
 
 log_results: False
 streams: ['combined']
 
 # model args for gpnn
-'edge_feature_size': 1164
-'node_feature_size': 3137
+'edge_feature_size': 1087
+'node_feature_size': 3130
 'message_size': 256
 'link_hidden_size': 256 
 'link_hidden_layers': 1

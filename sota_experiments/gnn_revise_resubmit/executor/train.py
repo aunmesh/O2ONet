@@ -45,7 +45,7 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
 
         ### Loss Calculation
         loss_dict = get_loss(output_dict, d_item, criterions, config)
-        
+        print("Loss Dict", loss_dict)
         ### Backward Pass
         loss_dict['loss_total'].backward()
 

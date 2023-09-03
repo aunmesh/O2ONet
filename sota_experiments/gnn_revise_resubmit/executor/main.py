@@ -58,7 +58,7 @@ def main(args):
         
         ### create training data loader        
         train_dataset = get_dataset(config, 'train')
-        print("FLAG 1", train_dataset)
+
         if config['overfit']:
             train_loader = DataLoader(train_dataset, batch_size=config['train_batch_size'], shuffle=False)    
         else:
@@ -79,7 +79,7 @@ def main(args):
             ### Train for an epoch and get the result dictionary
             train_result = train(model, train_loader, optimizer, config, criterions, train_metric_tracker)
             
-            if config['overfit']:
+            if config['overfit'] and config['log_results'] == True:
                 logger.log_dict(train_result)
                 continue
             

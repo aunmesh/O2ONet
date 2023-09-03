@@ -189,7 +189,8 @@ class GPNN(torch.nn.Module):
         predictions['combined']['lr'] = self.lr_cls(num_pairs, classifier_input, 
                                                     batch_size)
         
-        predictions['combined']['cr'] = self.cr_softmax( self.cr_cls(num_pairs, classifier_input, batch_size) )
+        # predictions['combined']['cr'] = self.cr_softmax( self.cr_cls(num_pairs, classifier_input, batch_size) )
+        predictions['combined']['cr'] = self.cr_cls(num_pairs, classifier_input, batch_size)
         
         predictions['combined']['mr'] = self.mr_cls(num_pairs, classifier_input, 
                                                     batch_size)

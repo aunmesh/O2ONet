@@ -9,17 +9,11 @@ def get_loss(output, target, criterions, config=None):
         loss['loss_total'] = criterions['action'](output['action_index_logit'], target['action_index'])
         return loss
     
-    if config['model_name'] == 'GPNN' or config['model_name'] == 'GPNN_icra' or config['model_name'] == 'hgat' or config['model_name'] == 'imp':
+    if config['model_name'] == 'GPNN' or config['model_name'] == 'hgat' or config['model_name'] == 'imp':
         
         if config['loss'] == 'masked loss':
             return masked_loss_gpnn(output, target, criterions)
         
-        if config['loss'] == 'masked loss with positive label encouragement':
-            return masked_loss_encouraging_positive(
-                                                    output, target, 
-                                                    criterions, 
-                                                    config['pcp_hyperparameter']
-                                                    )
 
 
     if config['model_name'] == 'mfurln':
