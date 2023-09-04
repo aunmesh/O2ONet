@@ -289,6 +289,7 @@ def process_data_for_fpass(data_item, config):
             interaction_centric_features.append(temp_feat)
 
         data_item['relative_spatial_feature'] = torch.cat(interaction_centric_features, 3)
+        data_item['activity_embedding'] = data_item['activity_embedding'].to(config['device']).double()
                     
         # data_item['relative_spatial_feature'] = data_item['relative_spatial_feature'].flatten(3).to(config['device']).double()
         

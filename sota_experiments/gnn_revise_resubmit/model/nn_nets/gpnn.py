@@ -73,7 +73,7 @@ class GPNN(torch.nn.Module):
         self.agg = self.config['aggregator']
         self.classifier_input_dimension = self.config['message_size']
 
-    def make_classifier_inputs(self, node_embeddings, pairs):
+    def make_classifier_inputs(self, node_embeddings, pairs, context_embedding):
         '''
         makes the classifier input from the node embeddings and pairs
 
@@ -97,13 +97,16 @@ class GPNN(torch.nn.Module):
                                        device=self.config['device']).double()
 
         for b in range(num_batches):
-
+            # temp_context_embedding = context_embedding[b, :]
+            
             for i in range(num_pairs):
 
                 ind0, ind1 = pairs[b, i, 0], pairs[b, i, 1]
 
                 emb0, emb1 = node_embeddings[b, ind0], node_embeddings[b, ind1]
-                classifier_input[b, i] = aggregate(emb0, emb1, self.agg)
+                temp_agg = aggregate(emb0, emb1, self.agg)
+                classifier_input[b, i] = temp_agg
+                # classifier_input[b, i] = aggregate(temp_agg, temp_context_embedding, 'concat')
 
         return num_pairs, classifier_input
 
@@ -180,7 +183,8 @@ class GPNN(torch.nn.Module):
         
         num_pairs, classifier_input = self.make_classifier_inputs(
             final_embeddings,
-            data_item['object_pairs']
+            data_item['object_pairs'],
+            data_item['activity_embedding']
         )
 
         predictions = {}
@@ -198,6 +202,7 @@ class GPNN(torch.nn.Module):
 
 
         return predictions
+
 
     def _load_link_fun(self, config):
 

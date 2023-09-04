@@ -2,8 +2,8 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 25
-lr: .0003
+num_epochs: 2
+lr: .001
 
 features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
                 'object_semantic_embeddings', 'object_centric_shape_feats']
@@ -60,12 +60,12 @@ aggregator : 'mean'
 dataset_description: 'gpnn_dataset'
 
 # root folder of the dataset
-full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v2.pkl'
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v4.pkl'
 split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
 
 # relative location of the annotations file
 
-device: 'cuda:1'
+device: 'cuda:3'
 
 iou_threshold: 0.5
 dis_threshold: 0.5
@@ -80,7 +80,7 @@ comments: 'None'
 wandb_project_name: 'resubmit_gpnn'
 wandb_entity: 'aunmesh'
 
-log_results: False
+log_results: True
 streams: ['combined']
 
 # model args for gpnn

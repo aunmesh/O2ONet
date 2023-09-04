@@ -62,7 +62,8 @@ def main(args):
         if config['overfit']:
             train_loader = DataLoader(train_dataset, batch_size=config['train_batch_size'], shuffle=False)    
         else:
-            train_loader = DataLoader(train_dataset, batch_size=config['train_batch_size'], shuffle=False)
+            train_loader = DataLoader(train_dataset, batch_size=config['train_batch_size'], 
+                                      shuffle=False, drop_last=True)
 
         ### create validation data loader
         val_dataset = get_dataset(config, 'val')

@@ -13,16 +13,21 @@ class gpnn_dataset(Dataset):
             dataset_config_file: Path to the config file with various configs.
                                  Has information about which features to use
         """
+
         self.config = config
         self.split = split
         
-        self.full_dataset = read_data(self.config['full_dataset_location'])
+        self.dataset = read_data(self.config['full_dataset_location'])
         self.split_dict = read_data(config['split_dict_location'])
         # self.dataset = self.full_dataset
-        self.select_split()
         
-        if self.config['overfit'] and split=='train':
-            self.dataset = self.dataset[:self.config['train_batch_size']]
+        self.indices = list(range(len(self.dataset)))
+
+
+        # self.select_split()
+        
+        # if self.config['overfit'] and split=='train':
+        #     self.dataset = self.dataset[:self.config['train_batch_size']]
 
     def select_split(self):
         
@@ -38,14 +43,21 @@ class gpnn_dataset(Dataset):
             temp_split = self.split_dict[temp_key]
             if temp_split == self.split:
                 self.dataset.append(d)
-        print("FLAG DATASET", len(self.dataset))
+
         del self.full_dataset
 
     def __len__(self):
         #return # self.config['train_batch_size']
-        return len(self.dataset)
+        # return len(self.dataset)
+        return len(self.indices)
+
+    def set_indices(self, new_indices):
+        self.indices = new_indices
 
     def __getitem__(self, idx):
-        data_item = self.dataset[idx]
-        return data_item, idx
+        
+        # data_item = self.dataset[idx]
+        # return data_item, idx
 
+        actual_idx = self.indices[idx]
+        return self.dataset[actual_idx], actual_idx

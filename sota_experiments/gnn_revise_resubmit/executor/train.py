@@ -10,6 +10,7 @@ from utils.utils import loss_epoch_aggregator, get_loss
 
 from tqdm import tqdm as tqdm
 from time import time
+
 def train(model, train_loader, optimizer, config, criterions, metric_tracker):
     """
     Args:
@@ -45,7 +46,10 @@ def train(model, train_loader, optimizer, config, criterions, metric_tracker):
 
         ### Loss Calculation
         loss_dict = get_loss(output_dict, d_item, criterions, config)
-        print("Loss Dict", loss_dict)
+        # print("Loss Dict", loss_dict['loss_total'], idx)
+
+        # print("Loss Dict", loss_dict['loss_total'])
+        
         ### Backward Pass
         loss_dict['loss_total'].backward()
 

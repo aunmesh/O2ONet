@@ -165,9 +165,8 @@ def masked_loss_gpnn(predictions, target, criterions):
             loss['loss_' + k]+=temp_loss
     
     
-    # for k in keys:
-    #     loss['loss_' + k] /= (1.0 * tot_num_rels)
-
+    for k in keys:
+        loss['loss_' + k] /= (1.0 * tot_num_rels)
 
     # adding all losses together
     for k in keys:
