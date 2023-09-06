@@ -2,7 +2,7 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 10
+num_epochs: 25
 lr: .001
 features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
                 'object_semantic_embeddings', 'object_centric_shape_feats']
@@ -74,12 +74,10 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ooi_icra_graph_transformer'
+wandb_project_name: 'revise_resubmit_transformers'
 wandb_entity: 'aunmesh'
 
-log_results: False
-
-log_results: False
+log_results: True
 streams: ['combined']
 
 best_model_selection_key: 'val_combined_mAP_all'

@@ -2,7 +2,7 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 7
+num_epochs: 25
 lr: .001
 
 features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
@@ -55,7 +55,7 @@ mr_dropout : 0.15
 aggregator : 'mean'
 
 # field to distinguish from different datasets (depending on gif length)
-device: 'cuda:1'
+device: 'cuda:2'
 
 # root folder of the dataset
 full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v4.pkl'
@@ -66,10 +66,10 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'resubmit_imp_debug'
+wandb_project_name: 'revise_resubmit_imp'
 wandb_entity: 'aunmesh'
 
-log_results: False
+log_results: True
 streams: ['combined']
 
 best_model_selection_key: 'val_combined_mAP_all'

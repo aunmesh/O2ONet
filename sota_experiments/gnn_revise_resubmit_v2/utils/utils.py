@@ -134,6 +134,12 @@ def get_parser():
                         default=True, 
                         help='bool for training'
                         )
+    
+    parser.add_argument('--stratified',
+                        type=int, 
+                        default=0, 
+                        help='stratified split number'
+                        )
 
     parser.add_argument('--config', 
                         default="/workspace/work/O2ONet/sota_experiments/gnn/configs/training.yaml",

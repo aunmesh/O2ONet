@@ -2,7 +2,7 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 6
+num_epochs: 25
 lr: .001
 
 
@@ -89,10 +89,10 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ral_hgat'
+wandb_project_name: 'revise_resubmit_hgat'
 wandb_entity: 'aunmesh'
 
-log_results: False
+log_results: True
 streams: ['combined']
 
 best_model_selection_key: 'val_combined_mAP_all'

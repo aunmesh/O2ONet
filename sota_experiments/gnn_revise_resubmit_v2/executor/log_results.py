@@ -37,6 +37,76 @@ class wandb_logger:
         wandb.log(log_dict)
 
 
+
+
+import os
+import json
+import datetime
+
+
+
+
+class CrossValidationLogger:
+    def __init__(self, config):
+        
+        self.config = config
+        
+        self.num_folds = config['num_folds']
+        self.log_dir = config['master_log_dir'] + '/' + config['model_name'] + '/'
+        
+        self.experiment_name = config['split_file_id']
+                
+        self.experiment_metadata = self.config
+        
+        self.num_folds = config['num_folds']
+        self.fold_data = {f"fold_{i + 1}": {} for i in range(self.num_folds)}
+        self.summary_metrics = {}
+        
+        # Ensure log directory exists
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir)
+
+
+    def log_fold_start(self, fold_num, train_indices, val_indices):
+        """Log the start of a fold."""
+        fold_key = f"fold_{fold_num}"
+        self.fold_data[fold_key]['train_indices'] = train_indices
+        self.fold_data[fold_key]['val_indices'] = val_indices
+        self.fold_data[fold_key]['start_time'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+        self.fold_data[fold_key]['metrics'] = []
+
+    def log_fold_end(self, fold_num):
+        """Log the end of a fold."""
+        fold_key = f"fold_{fold_num}"
+        self.fold_data[fold_key]['end_time'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+
+    def log_fold_metrics(self, fold_num, **kwargs):
+        """Log metrics for a fold."""
+        fold_key = f"fold_{fold_num}"
+        self.fold_data[fold_key]['metrics'].append(kwargs)
+
+    def log_summary_metrics(self, **summary_metrics):
+        self.summary_metrics = summary_metrics
+
+    def save(self):
+        """Save the experiment metadata and fold data to one file on disk."""
+        save_path = os.path.join(self.log_dir, f"{self.experiment_name}_log.json")
+
+        # Combining metadata and fold data into one dictionary
+        data_to_save = {
+            'metadata': self.experiment_metadata,
+            'fold_data': self.fold_data,
+            'summary_metrics': self.summary_metrics
+        }
+
+        with open(save_path, 'w') as file:
+            json.dump(data_to_save, file, indent=4)
+
+
+
+
+
+
 '''
 config = config_loader(config_file)
 wandb_log = 1

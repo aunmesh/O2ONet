@@ -2,7 +2,7 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 6
+num_epochs: 2
 lr: .001
 
 features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
@@ -68,7 +68,7 @@ aggregator : 'mean'
 
 # field to distinguish from different datasets (depending on gif length)
 dataset_description: 'gpnn_icra_dataset'  # same as nenn dataset
-device: 'cuda:1'
+device: 'cuda:3'
 
 # root folder of the dataset
 full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v4.pkl'
@@ -80,10 +80,10 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'ral_mfurln'
+wandb_project_name: 'revise_resubmit_mfurln'
 wandb_entity: 'aunmesh'
 
-log_results: False
+log_results: True
 streams: ['combined']
 
 best_model_selection_key: 'val_combined_mAP_all'
