@@ -1,0 +1,74 @@
+train_batch_size: 32
+val_batch_size: 32
+test_batch_size: 32
+ 
+num_epochs: 7
+lr: .001
+
+features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
+                'object_semantic_embeddings', 'object_centric_shape_feats']
+
+relative_features_list: ['relative_spatial_feature', 'interaction_bbox_CLIP', 
+                        'interaction_centric_shape_feats']
+
+
+custom_filter_dict:
+
+    'geometric_feature':
+      frame_dim : 1
+      frame_index : 5
+
+    'object_centric_shape_feats':
+      frame_dim : 1
+      frame_index : 5
+
+    'object_i3d_feature':
+      frame_dim : 0
+      frame_index : 2
+
+    'motion_feature':
+      frame_dim : 1
+      frame_index : 5
+
+num_heads: 4
+
+# After how many epochs to save the model
+save_epoch: 89
+
+model_saving_path: '/workspace/work/misc/icra_nenn/nenn_cleaned/saved_model'
+
+# Neural Network dimensions
+
+nenn_node_in_dim_wn: 3130
+nenn_node_out_dim_wn: 256
+nenn_edge_in_dim_we: 1087
+nenn_edge_out_dim_we: 256
+
+
+scr_dimensions : [1024,3]
+scr_dropout : 0.15
+
+lr_dimensions : [1024,5]
+lr_dropout : 0.15
+
+mr_dimensions : [1024,14]
+mr_dropout : 0.15
+aggregator : 'mean'
+
+
+# means and std dict locations
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_with_nenn.pkl'
+split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
+
+device: 'cuda:1'
+
+loss_calculation: 'masked'
+
+model_name: 'NENN'
+comments: 'None'
+log_results: False
+overfit: False
+streams: ['combined']
+
+optimizer: 'Adam'
+best_model_selection_key: 'val_combined_mAP_all'

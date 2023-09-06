@@ -1,0 +1,69 @@
+train_batch_size: 32
+val_batch_size: 32
+test_batch_size: 32
+
+num_epochs: 200
+lr: .001
+
+optimizer: 'Adam'
+
+# After how many epochs to save the model
+save_epoch: 1
+
+model_name: 'vsgnet'
+GNN: 'GCN'
+
+overfit: False
+
+model_saving_path: '/workspace/work/results_ICRA_vsgnet/'
+
+aggregator : 'mean'
+
+# field to distinguish from different datasets (depending on gif length)
+dataset_description: 'vsgnet_dataset'
+
+split_file_loc: '/workspace/data/data_folder/o2o/split_dict.pkl'
+# root folder of the dataset
+dataset_root: '/workspace/work/vsgnet_dataset/vsgnet_light_combined'
+
+train_annotations: 'vsgnet_light_train.pkl'
+val_annotations: 'vsgnet_light_val.pkl'
+test_annotations: 'vsgnet_light_test.pkl'
+
+# relative location of the annotations file
+device: 'cuda:2'
+
+gif_size: 11
+
+loss_calculation: 'masked loss vsgnet'
+comments: 'None'
+
+# wandb_configs
+wandb_project_name: 'icra_submission_vsgnet'
+wandb_entity: 'aunmesh'
+
+log_results: True
+
+roi_pool_size: [10, 10]
+spatial_scale: 1
+sampling_ratio: 1
+
+
+# Neural Network dimensions
+gnn_dimensions : [1024, 1024]
+
+spatial_branch_cr_classifier_dimension : [512, 3]
+spatial_branch_lr_classifier_dimension : [512, 5]
+spatial_branch_mr_classifier_dimension : [512, 14]
+
+graphical_branch_cr_classifier_dimension : [1024, 3]
+graphical_branch_lr_classifier_dimension : [1024, 5]
+graphical_branch_mr_classifier_dimension : [1024, 14]
+
+refined_branch_cr_classifier_dimension : [512, 3]
+refined_branch_lr_classifier_dimension : [512, 5]
+refined_branch_mr_classifier_dimension : [512, 14]
+
+
+streams: ['graphical', 'refined', 'spatial', 'combined']
+gnn_dropout : 0.15

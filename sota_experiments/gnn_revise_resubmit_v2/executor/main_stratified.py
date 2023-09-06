@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/workspace/work/misc/O2ONet/sota_experiments/gnn_revise_resubmit")
+sys.path.append("/workspace/work/misc/O2ONet/sota_experiments/gnn_revise_resubmit_v2")
 import os
 from utils.utils import get_parser, config_loader
 from train import train

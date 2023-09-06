@@ -18,6 +18,11 @@ class gpnn_dataset(Dataset):
         self.split = split
         
         self.dataset = read_data(self.config['full_dataset_location'])
+
+        import random
+
+        random.shuffle(self.dataset)
+
         self.split_dict = read_data(config['split_dict_location'])
         # self.dataset = self.full_dataset
         

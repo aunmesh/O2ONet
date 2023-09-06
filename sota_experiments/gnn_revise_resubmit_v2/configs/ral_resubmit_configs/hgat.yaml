@@ -2,8 +2,9 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 7
+num_epochs: 6
 lr: .001
+
 
 features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
                 'object_semantic_embeddings', 'object_centric_shape_feats']
@@ -11,8 +12,6 @@ features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
 relative_features_list: ['relative_spatial_feature', 'interaction_bbox_CLIP', 
                         'interaction_centric_shape_feats']
 
-
-best_model_selection_key : 'val_combined_mAP_all'
 
 custom_filter_dict:
 
@@ -32,6 +31,7 @@ custom_filter_dict:
       frame_dim : 1
       frame_index : 5
 
+
 optimizer: 'Adam'
 
 # After how many epochs to save the model
@@ -39,33 +39,45 @@ save_epoch: 5
 
 loss: 'masked loss'
 
-model_name: 'GPNN'
-GNN: 'GPNN'
+model_name: 'hgat'
+GNN: 'GATv2Conv'
+# GNN: 'GATv2Conv'
+
+
 overfit: False
 
-model_saving_path: '/workspace/work/ral_gpnn/'
+model_saving_path: '/workspace/work/results_ICRA_gpnn/'
+
+
+edge_feature_size: 1087
+node_feature_size: 3130
+
 
 # Neural Network dimensions
-cr_dimensions : [256, 3]
+node_gnn_dimensions: [3130, 256]
+node_gnn_dropout : 0.15
+
+triplet_gnn_dimensions: [1087, 256]
+triplet_gnn_dropout : 0.15
+
+
+cr_dimensions : [512, 3]
 cr_dropout : 0.15
 
-lr_dimensions : [256, 5]
+lr_dimensions : [512, 5]
 lr_dropout : 0.15
 
-mr_dimensions : [256, 14]
+mr_dimensions : [512, 14]
 mr_dropout : 0.15
 aggregator : 'mean'
 
 # field to distinguish from different datasets (depending on gif length)
-dataset_description: 'gpnn_dataset'
+device: 'cuda:1'
 
 # root folder of the dataset
-full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v4.pkl'
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_with_nenn.pkl'
 split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
 
-# relative location of the annotations file
-
-device: 'cuda:3'
 
 iou_threshold: 0.5
 dis_threshold: 0.5
@@ -77,21 +89,10 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'resubmit_gpnn'
+wandb_project_name: 'ral_hgat'
 wandb_entity: 'aunmesh'
 
-log_results: True
+log_results: False
 streams: ['combined']
 
-# model args for gpnn
-'edge_feature_size': 1087
-'node_feature_size': 3130
-'message_size': 256
-'link_hidden_size': 256 
-'link_hidden_layers': 1
-'link_relu': False
-'update_hidden_layers': 1
-'update_dropout': 0.1
-'update_bias': True
-'propagate_layers': 1
-'resize_feature_to_message_size': True
+best_model_selection_key: 'val_combined_mAP_all'

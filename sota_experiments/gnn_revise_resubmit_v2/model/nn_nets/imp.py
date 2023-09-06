@@ -22,8 +22,8 @@ class imp(torch.nn.Module):
         
         hidden_size = 128
         self.classifier_input_dimension = hidden_size
-        self.node_transform = self.make_linear_layer([4206,512,hidden_size])
-        self.edge_transform = self.make_linear_layer([77,hidden_size])
+        self.node_transform = self.make_linear_layer([config['node_feature_size'], 512, hidden_size])
+        self.edge_transform = self.make_linear_layer([config['edge_feature_size'], hidden_size])
         
         self.node_gru = torch.nn.GRU(hidden_size,hidden_size, batch_first=True)
         self.edge_gru = torch.nn.GRU(hidden_size,hidden_size, batch_first=False)
@@ -196,9 +196,6 @@ class imp(torch.nn.Module):
         
         batch_size = data_item['concatenated_node_features'].shape[0]
         
-        data_item['edge_index'] = data_item['edge_index'].to(self.config['device'])
-        data_item['num_edges'] = data_item['num_edges'].to(self.config['device'])
-        
         data_item['num_obj'] = data_item['num_obj'].to(self.config['device'])
 
         '''
@@ -209,7 +206,7 @@ class imp(torch.nn.Module):
         4. Perform message pooling
         '''
         concatenated_node_features = data_item['concatenated_node_features']
-        edge_features = data_item['relative_feature'].permute(0,2,3,1,4).flatten(3).to(self.config['device'])
+        edge_features = data_item['interaction_feature']
         
         node_features = self.node_transform(concatenated_node_features)
         edge_features = self.edge_transform(edge_features)
@@ -248,13 +245,7 @@ class imp(torch.nn.Module):
 
         # Make the batch for features
         predictions['combined']['lr'] = self.lr_cls(classifier_input)
-        predictions['combined']['cr'] = self.cr_softmax(self.cr_cls(classifier_input))
+        predictions['combined']['cr'] = self.cr_cls(classifier_input)
         predictions['combined']['mr'] = self.mr_cls(classifier_input)
 
         return predictions
-
-        
-        
-        
-        
-        

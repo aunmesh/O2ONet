@@ -123,6 +123,14 @@ def masked_loss_gpnn(predictions, target, criterions):
     mask        : A mask of dimension [b_size, max_num_obj_pairs]
     '''
 
+    # examine_data = {}
+    # examine_data['predictions'] = predictions
+    # examine_data['target'] = target 
+    # examine_data['criterions'] = criterions
+    
+    # torch.save(examine_data, 'examine_data.pt')
+    # if 1 == 1:
+    #     return 'lol'
     mask = target['num_relation']
 
     loss = {}

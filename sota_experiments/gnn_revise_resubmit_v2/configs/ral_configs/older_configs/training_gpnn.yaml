@@ -2,15 +2,19 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 7
-lr: .001
 
-features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
-                'object_semantic_embeddings', 'object_centric_shape_feats']
+num_epochs: 175
+lr: .0003
+# features_list: ['geometric_feature', 'object_2d_cnn_feature', 'object_i3d_feature', 'motion_feature']
+features_list: ['object_2d_cnn_feature', 'object_i3d_feature']
+# features_list: ['geometric_feature', 'object_2d_cnn_feature']
+# features_list: ['object_2d_cnn_feature']
 
-relative_features_list: ['relative_spatial_feature', 'interaction_bbox_CLIP', 
-                        'interaction_centric_shape_feats']
 
+# torch.Size([12, 11, 5]) geometric_feature
+# torch.Size([11, 12, 2048]) object_2d_cnn_feature
+# torch.Size([5, 12, 2048]) object_i3d_feature
+# torch.Size([12, 11, 5]) motion_feature
 
 best_model_selection_key : 'val_combined_mAP_all'
 
@@ -20,8 +24,8 @@ custom_filter_dict:
       frame_dim : 1
       frame_index : 5
 
-    'object_centric_shape_feats':
-      frame_dim : 1
+    'object_2d_cnn_feature':
+      frame_dim : 0
       frame_index : 5
 
     'object_i3d_feature':
@@ -60,12 +64,12 @@ aggregator : 'mean'
 dataset_description: 'gpnn_dataset'
 
 # root folder of the dataset
-full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v4.pkl'
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/gpnn/gpnn_feats.pkl'
 split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
 
 # relative location of the annotations file
 
-device: 'cuda:3'
+device: 'cuda:1'
 
 iou_threshold: 0.5
 dis_threshold: 0.5
@@ -77,15 +81,15 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'resubmit_gpnn'
+wandb_project_name: 'ral_gpnn'
 wandb_entity: 'aunmesh'
 
 log_results: True
 streams: ['combined']
 
 # model args for gpnn
-'edge_feature_size': 1087
-'node_feature_size': 3130
+'edge_feature_size': 220
+'node_feature_size': 4096
 'message_size': 256
 'link_hidden_size': 256 
 'link_hidden_layers': 1
