@@ -67,7 +67,6 @@ class CrossValidationLogger:
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
 
-
     def log_fold_start(self, fold_num, train_indices, val_indices):
         """Log the start of a fold."""
         fold_key = f"fold_{fold_num}"
@@ -148,26 +147,31 @@ class CrossValidationLogger:
 
         # Find the best epoch for each fold
         for fold in self.fold_data:
-            best_mAP = -float('inf')
-            best_epoch = None
+            # best_mAP = -float('inf')
+            # best_epoch = None
 
-            # Assuming the structure of fold_data[fold] is:
-            # {epoch_1: {...}, epoch_2: {...}, ...}
-            for epoch in self.fold_data[fold]:
-                if 'metrics' not in self.fold_data[fold][epoch]:  # Skip if metrics key not present
-                    continue
+            # # Assuming the structure of fold_data[fold] is:
+            # # {epoch_1: {...}, epoch_2: {...}, ...}
+            
+            # for epoch in self.fold_data[fold]:
+            #     if 'metrics' not in self.fold_data[fold][epoch]:  # Skip if metrics key not present
+            #         continue
                 
-                for metric_key in self.fold_data[fold][epoch]['metrics']:
-                    if 'mAP_all' in metric_key:
-                        if self.fold_data[fold][epoch]['metrics'][metric_key] > best_mAP:
-                            best_mAP = self.fold_data[fold][epoch]['metrics'][metric_key]
-                            best_epoch = epoch
-
-            best_data_per_fold[fold] = self.fold_data[fold][best_epoch]['metrics']
-
+            #     for metric_key in self.fold_data[fold][epoch]['metrics']:
+            #         if 'val_mAP_all' in metric_key:
+            #             if self.fold_data[fold][epoch]['metrics'][metric_key] > best_mAP:
+            #                 best_mAP = self.fold_data[fold][epoch]['metrics'][metric_key]
+            #                 best_epoch = epoch
+            # if best_epoch == None:
+            #     print("ERROR: No best epoch found for fold " + str(fold) )
+            best_data_per_fold[fold] = self.fold_data[fold]['metrics'][8]
+        
         # Aggregate the data of the best epoch for each fold
         keys = best_data_per_fold[list(best_data_per_fold.keys())[0]].keys()
+        print(keys)
         for key in keys:
-            aggregated_results['Agg_' + key] = sum([best_data_per_fold[fold][key] for fold in best_data_per_fold]) / len(best_data_per_fold)
+            temp_key = key[7:]
+            # print("flag", key, temp_key)
+            aggregated_results['Agg_' + temp_key] = sum([best_data_per_fold[fold]['fold_' + str(i) + '_' + temp_key] for i, fold in enumerate(best_data_per_fold)]) / len(best_data_per_fold)
 
         self.summary_metrics = aggregated_results
