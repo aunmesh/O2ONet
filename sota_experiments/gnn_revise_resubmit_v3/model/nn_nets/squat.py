@@ -60,14 +60,14 @@ class SQUAT(torch.nn.Module):
         self.classifier_input_dimension = self.config['message_size']
 
 
-    def make_classifier_inputs(self, node_features, edge_embeddings, pairs, num_rels):
+    def make_classifier_inputs(self, node_features, edge_features, edge_embeddings, pairs, num_rels):
         
         # Algorithm:
         # Goal: create a tensor which has shape b_size, max_num_pairs, feat_dim
         # each row has to correspond to the given pair of objects
         # using the pair of objects we can get the features
         
-        feat_dim = 2 * edge_embeddings.shape[-1]
+        feat_dim = 3 * edge_embeddings.shape[-1]
         num_pairs = pairs.shape[1]   # Always equal to max pairs
         num_batches = edge_embeddings.shape[0]
 
@@ -87,13 +87,20 @@ class SQUAT(torch.nn.Module):
                 ind0, ind1 = pairs[b, i, 0], pairs[b, i, 1]
                 
                 n1, n2 = node_features[b, ind0, :], node_features[b, ind1, :]
+                classifier_input[b, i, : 2*edge_embeddings.shape[-1] ] = aggregate(n1, n2, 'concat')
                 
                 emb0 = edge_embeddings[b, ind0, ind1]
                 emb1 = edge_embeddings[b, ind1, ind0]
+                temp_e_0 = aggregate(emb0, emb1, 'mean')
                 
-                classifier_input[b, i, :feat_dim//2] = aggregate(emb0, emb1, self.agg)
-                classifier_input[b, i, feat_dim//2:] = aggregate(n1, n2, self.agg)
-                # classifier_input[b, i, :] = aggregate(emb0, emb1, 'concat')
+                emb0 = edge_features[b, ind0, ind1]
+                emb1 = edge_features[b, ind1, ind0]
+                temp_e_1 = aggregate(emb0, emb1, 'mean')	
+                
+                temp_e = aggregate(temp_e_0, temp_e_1, 'mean')
+                
+                classifier_input[b, i, 2*edge_embeddings.shape[-1]: ] = temp_e
+                
                 
         return classifier_input, num_pairs
 
@@ -133,7 +140,8 @@ class SQUAT(torch.nn.Module):
             reshaped_masks.append(torch.cat(new_list, dim=0))
                 
                 
-        classifier_input, num_pairs = self.make_classifier_inputs(node_features, edge_embeddings, 
+        classifier_input, num_pairs = self.make_classifier_inputs(node_features, edge_features,
+                                                                  edge_embeddings, 
                                                                   data_item['object_pairs'],
                                                                   data_item['num_relation'])
 
