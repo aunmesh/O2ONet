@@ -4,9 +4,6 @@ import torch
 import torch.nn as nn
 import torch.autograd
 
-from utils.utils import collate_edge_indices, collate_node_features, decollate_node_embeddings
-
-from model.nn_modules.gnn import GNN
 from model.nn_modules.relation_classifier_2 import relation_classifier_2
 from utils.utils import aggregate
 import torch.nn.functional as F

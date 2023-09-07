@@ -1,4 +1,3 @@
-from model.nn_nets.ooi_net import ooi_net as ooi_net
 from model.nn_nets.gpnn import GPNN as GPNN
 import torch
 import os
@@ -6,10 +5,6 @@ import os
 
 from dataloader.dataset import dataset
 
-from model.nn_nets.vsgnet import vsgnet
-from model.nn_nets.drg import DRG
-from model.nn_nets.ican import iCAN
-from model.nn_nets.action_recog_nets.action_recog import action_net_cnn_stream
 import torch.nn as nn
 
 from metrics.metrics import metric_tracker, metric_tracker_multi_stream, metric_tracker_action_recog
@@ -45,25 +40,14 @@ def get_metric_trackers(config):
         
 
 
-from model.nn_nets.graph_rcnn import graph_rcnn
-from model.nn_nets.hgat import hgat
-from model.nn_nets.mfurln import mfurln
 from model.nn_nets.imp import imp
-from model.nn_nets.ooi_net_nenn import nenn
-from model.nn_nets.ooi_net import ooi_net
 from model.nn_nets.squat import SQUAT
 from model.nn_nets.mlp_baseline import MLP
 
 def get_model(config):
     model_map = {
-        'graph_rcnn': graph_rcnn,
-        'mfurln': mfurln,
         'imp': imp,
-        'hgat': hgat,
-        'ooi_net': ooi_net,
         'GPNN': GPNN,
-        'NENN': nenn,
-        'GraphTransformer': ooi_net,
         'SQUAT': SQUAT,
         'MLP': MLP
     }

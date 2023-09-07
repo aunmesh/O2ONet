@@ -8,32 +8,29 @@ from model.nn_modules.relation_classifier import relation_classifier
 
 from utils.utils import aggregate
 from model.nn_modules.squat import SquatContext
-class SQUAT(torch.nn.Module):
+
+class MLP(torch.nn.Module):
 
     def __init__(self, config):
 
-        super(SQUAT, self).__init__()
+        super(MLP, self).__init__()
         self.config = config.copy()
-        self.squat_context = SquatContext(self.config).to(self.config['device'])
         
-        if self.config['resize_feature_to_message_size']:
-            # Resize large features
+        self.edge_feature_resize = torch.nn.Linear(
+            config['edge_feature_size'],
+            config['message_size']
+        ).to(config['device'])
 
-            self.edge_feature_resize = torch.nn.Linear(
-                config['edge_feature_size'],
-                config['message_size']
-            ).to(config['device'])
+        self.node_feature_resize = torch.nn.Linear(
+            config['node_feature_size'],
+            config['message_size']
+        ).to(config['device'])
 
-            self.node_feature_resize = torch.nn.Linear(
-                config['node_feature_size'],
-                config['message_size']
-            ).to(config['device'])
+        torch.nn.init.xavier_normal(self.edge_feature_resize.weight)
+        torch.nn.init.xavier_normal(self.node_feature_resize.weight)
 
-            torch.nn.init.xavier_normal(self.edge_feature_resize.weight)
-            torch.nn.init.xavier_normal(self.node_feature_resize.weight)
-
-            config['edge_feature_size'] = config['message_size']
-            config['node_feature_size'] = config['message_size']
+        config['edge_feature_size'] = config['message_size']
+        config['node_feature_size'] = config['message_size']
 
 
         # creating the cr classifier
@@ -41,7 +38,6 @@ class SQUAT(torch.nn.Module):
         scr_dropout = self.config['cr_dropout']
         self.cr_cls = relation_classifier(
             cr_dim, scr_dropout, self.config['device'], 1)
-        self.cr_softmax = torch.nn.Softmax(dim=-1)
 
         # creating the lr classifier
         lr_dim = self.config['lr_dimensions']
@@ -108,32 +104,8 @@ class SQUAT(torch.nn.Module):
         edge_features = self.edge_feature_resize(edge_features)
         node_features = self.node_feature_resize(node_features)
 
-        
-        
-        edge_embeddings, pred_masks = self.squat_context(node_features, edge_features,
-                                                                            data_item['num_obj'])
-        
-        reshaped_masks = []
-
-        for mask_list in pred_masks:
-            
-            new_list = []
-            
-            for m in mask_list:
-            
-                curr_len = m.shape[0]
-                temp = int(curr_len ** 0.5)
-            
-                temp_mask = m.view(temp, temp)
-                new_tensor = torch.zeros(12, 12, device=m.device)
-            
-                new_tensor[:temp, :temp] = temp_mask
-                new_list.append(new_tensor.unsqueeze(0))
-            
-            reshaped_masks.append(torch.cat(new_list, dim=0))
-                
-                
-        classifier_input, num_pairs = self.make_classifier_inputs(node_features, edge_embeddings, 
+                        
+        classifier_input, num_pairs = self.make_classifier_inputs(node_features, edge_features, 
                                                                   data_item['object_pairs'],
                                                                   data_item['num_relation'])
 
@@ -148,7 +120,6 @@ class SQUAT(torch.nn.Module):
         
         predictions['combined']['mr'] = self.mr_cls(num_pairs, classifier_input, 
                                                     batch_size)
-        predictions['combined']['masks'] = reshaped_masks
-
+        
 
         return predictions

@@ -2,7 +2,7 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 5
+num_epochs: 50
 lr: .001
 
 features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
@@ -39,7 +39,7 @@ save_epoch: 5
 
 loss: 'masked loss'
 
-model_name: 'SQUAT'
+model_name: 'MLP'
 overfit: False
 
 model_saving_path: '/workspace/work/ral_gpnn/'
@@ -69,7 +69,7 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'resubmit_squat'
+wandb_project_name: 'resubmit_mlp'
 wandb_entity: 'aunmesh'
 
 log_results: True

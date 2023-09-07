@@ -72,7 +72,7 @@ log_results: True
 wandb_project_name: 'revise_resubmit_nenn'
 wandb_entity: 'aunmesh'
 
-overfit: False
+overfit: True
 streams: ['combined']
 
 optimizer: 'Adam'

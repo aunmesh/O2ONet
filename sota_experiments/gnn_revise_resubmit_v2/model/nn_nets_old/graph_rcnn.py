@@ -242,6 +242,13 @@ class graph_rcnn(torch.nn.Module):
         lower = 0
         
         for b in range(batch_size):
+            # temp_num_rels = data_item['num_relation'][b]
+            # temp_obj_pairs = data_item['object_pairs'][b, :temp_num_rels]
+
+            # temp_indices_0 = temp_obj_pairs[:, 0]
+            # temp_indices_1 = temp_obj_pairs[:, 1]
+
+            # temp_num_rels = torch.sum(num_edges_for_batch == b)
             temp_num_rels = num_edges_for_batch[b].item()
             
             temp_indices_start = edge_indices[b, 0, :temp_num_rels]
@@ -262,6 +269,17 @@ class graph_rcnn(torch.nn.Module):
         
         lower = 0
         for b in range(batch_size):
+            
+            # temp_num_rels = data_item['num_relation'][b]
+            # temp_obj_pairs = data_item['object_pairs'][b, :temp_num_rels]
+            
+            # offset = torch.sum(data_item['num_relation'][:b])
+                                   
+            # rel_node_enumeration = [ max_node_index + offset + i for i in range(temp_num_rels) ]
+            # rel_node_enumeration = torch.tensor(rel_node_enumeration, dtype=torch.long,
+            #                                     device = self.config['device'])
+
+
 
             temp_num_rels = num_edges_for_batch[b]
 
@@ -299,6 +317,8 @@ class graph_rcnn(torch.nn.Module):
             lower += (temp_num_rels*4)
 
 
+        # print("DEBUG", collated_node_feature.shape, rel_node_feats.shape)
+        # print("DEBUG", collated_edge_index.shape, rel_edge_indices.shape)        
 
         node_and_rel_feats = torch.cat([collated_node_feature, rel_node_feats], dim=0)
         joint_edge_indices = torch.cat([collated_edge_index, rel_edge_indices], dim=-1)

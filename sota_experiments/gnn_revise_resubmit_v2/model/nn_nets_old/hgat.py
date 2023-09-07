@@ -18,21 +18,7 @@ class hgat(torch.nn.Module):
 
         self.config = config.copy()      
         self.classifier_input_dimension = self.config['node_gnn_dimensions'][-1]
-
-
-        self.edge_feature_resize = torch.nn.Linear(
-            config['edge_feature_size'],
-            config['node_gnn_dimensions'][-1]
-        ).to(config['device'])
-
-        self.node_feature_resize = torch.nn.Linear(
-            config['node_feature_size'],
-            config['node_gnn_dimensions'][-1]
-        ).to(config['device'])
-
-        torch.nn.init.xavier_normal(self.edge_feature_resize.weight)
-        torch.nn.init.xavier_normal(self.node_feature_resize.weight)
-
+        
         self.node_gnn = GNN(self.config, 'node_')
         self.triplet_gnn = GNN(self.config, 'triplet_')
         
@@ -78,7 +64,7 @@ class hgat(torch.nn.Module):
         return model
 
 
-    def make_classifier_inputs(self, node_embeddings, triplet_embeddings, edge_embeddings, pairs):
+    def make_classifier_inputs(self, node_embeddings, triplet_embeddings, pairs):
         '''
         makes the classifier input from the node embeddings and pairs
 
@@ -113,11 +99,7 @@ class hgat(torch.nn.Module):
                 emb0, emb1 = node_embeddings[b, ind0], node_embeddings[b, ind1]
                 classifier_input[b, i, :self.classifier_input_dimension] = aggregate(emb0, emb1, self.agg)
                 
-                temp_edge_embedding_0 = edge_embeddings[b, ind0, ind1]
-                temp_edge_embedding_1 = edge_embeddings[b, ind1, ind0]
-                temp_edge_embedding = aggregate(temp_edge_embedding_0, temp_edge_embedding_1, self.agg)
-                
-                triplet_embedding = triplet_embeddings[b, i] + temp_edge_embedding
+                triplet_embedding = triplet_embeddings[b, i]
                 classifier_input[b,i, self.classifier_input_dimension:] = triplet_embedding
 
         return classifier_input
@@ -218,9 +200,7 @@ class hgat(torch.nn.Module):
         all_triplet_embeddings = self.triplet_gnn(collated_triplet_features, 
                                                   collated_triplet_edge_index)
 
-        obj_embeddings_residual = self.node_feature_resize(obj_embeddings)
-        edge_embeddings_residual = self.edge_feature_resize(data_item['interaction_feature'])
-        
+
         triplet_embeddings = decollate_node_embeddings(
                                                         all_triplet_embeddings,
                                                         triplet_slicing,
@@ -229,8 +209,8 @@ class hgat(torch.nn.Module):
                                                        )
 
         classifier_input = self.make_classifier_inputs(
-                                                        obj_embeddings + obj_embeddings_residual, 
-                                                        triplet_embeddings , edge_embeddings_residual,
+                                                        obj_embeddings, 
+                                                        triplet_embeddings,
                                                         data_item['object_pairs']
                                                        )
 

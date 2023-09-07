@@ -208,8 +208,8 @@ class imp(torch.nn.Module):
         concatenated_node_features = data_item['concatenated_node_features']
         edge_features = data_item['interaction_feature']
         
-        node_features_orig = self.node_transform(concatenated_node_features)
-        edge_features_orig = self.edge_transform(edge_features)
+        node_features = self.node_transform(concatenated_node_features)
+        edge_features = self.edge_transform(edge_features)
         
         batch_size = concatenated_node_features.shape[0]
         num_nodes = concatenated_node_features.shape[1]
@@ -217,10 +217,10 @@ class imp(torch.nn.Module):
         num_time_steps = 2
         
         for t in range(num_time_steps):
-            node_features = node_features_orig.reshape([batch_size*num_nodes, -1])
+            node_features = node_features.reshape([batch_size*num_nodes, -1])
             node_features = node_features.unsqueeze(1)
             
-            edge_features = edge_features_orig.reshape([batch_size*num_nodes*num_nodes, -1])
+            edge_features = edge_features.reshape([batch_size*num_nodes*num_nodes, -1])
             edge_features = edge_features.unsqueeze(1)
             
             node_gru_hidden_states = self.node_gru(node_features)[0]
@@ -233,9 +233,6 @@ class imp(torch.nn.Module):
             edge_gru_hidden_states = self.edge_message_pooling(node_gru_hidden_states,
                                                                edge_gru_hidden_states,
                                                                data_item)
-        
-        node_gru_hidden_states += node_features_orig
-        edge_gru_hidden_states += edge_features_orig
         
         classifier_input = self.make_classifier_inputs(node_gru_hidden_states, edge_gru_hidden_states,
                                                        data_item['object_pairs'], data_item['num_relation'])

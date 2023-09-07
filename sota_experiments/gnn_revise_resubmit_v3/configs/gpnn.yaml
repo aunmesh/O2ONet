@@ -46,30 +46,23 @@ overfit: False
 model_saving_path: '/workspace/work/ral_gpnn/'
 
 # Neural Network dimensions
-cr_dimensions : [256, 3]
+cr_dimensions : [768, 3]
 cr_dropout : 0.15
 
-lr_dimensions : [256, 5]
+lr_dimensions : [768, 5]
 lr_dropout : 0.15
 
-mr_dimensions : [256, 14]
+mr_dimensions : [768, 14]
 mr_dropout : 0.15
-aggregator : 'mean'
-
-# field to distinguish from different datasets (depending on gif length)
-dataset_description: 'gpnn_dataset'
 
 # root folder of the dataset
-full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v4.pkl'
+#full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v5.pkl'
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_nenn_sliced.pkl'
 split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
 
 # relative location of the annotations file
 
 device: 'cuda:3'
-
-iou_threshold: 0.5
-dis_threshold: 0.5
-max_num_edges: 144
 
 gif_size: 11
 
@@ -80,7 +73,7 @@ comments: 'None'
 wandb_project_name: 'resubmit_gpnn'
 wandb_entity: 'aunmesh'
 
-log_results: True
+log_results: False
 streams: ['combined']
 
 # model args for gpnn

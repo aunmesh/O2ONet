@@ -2,7 +2,7 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 5
+num_epochs: 20
 lr: .001
 
 features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
@@ -11,8 +11,6 @@ features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
 relative_features_list: ['relative_spatial_feature', 'interaction_bbox_CLIP', 
                         'interaction_centric_shape_feats']
 
-
-best_model_selection_key : 'val_combined_mAP_all'
 
 custom_filter_dict:
 
@@ -32,6 +30,7 @@ custom_filter_dict:
       frame_dim : 1
       frame_index : 5
 
+
 optimizer: 'Adam'
 
 # After how many epochs to save the model
@@ -39,44 +38,41 @@ save_epoch: 5
 
 loss: 'masked loss'
 
-model_name: 'SQUAT'
+model_name: 'imp'
+
 overfit: False
 
-model_saving_path: '/workspace/work/ral_gpnn/'
+model_saving_path: '/workspace/work/results_ICRA_gpnn/'
 
-# Neural Network dimensions
-cr_dimensions : [512, 3]
+cr_dimensions : [256, 3]
 cr_dropout : 0.15
 
-lr_dimensions : [512, 5]
+lr_dimensions : [256, 5]
 lr_dropout : 0.15
 
-mr_dimensions : [512, 14]
+mr_dimensions : [256, 14]
 mr_dropout : 0.15
 aggregator : 'mean'
 
+# field to distinguish from different datasets (depending on gif length)
+device: 'cuda:2'
+
 # root folder of the dataset
-full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v5.pkl'
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v4.pkl'
 split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
 
-# relative location of the annotations file
-
-device: 'cuda:3'
-
-gif_size: 11
 
 loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'resubmit_squat'
+wandb_project_name: 'revise_resubmit_imp'
 wandb_entity: 'aunmesh'
 
 log_results: True
 streams: ['combined']
 
-# model args for gpnn
-'edge_feature_size': 1087
-'node_feature_size': 3130
-'message_size': 256
-'resize_feature_to_message_size': True
+best_model_selection_key: 'val_combined_mAP_all'
+
+edge_feature_size: 1087
+node_feature_size: 3130
