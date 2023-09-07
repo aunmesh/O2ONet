@@ -23,15 +23,6 @@ def main(args):
     
     ### Load Config
     config = config_loader(args.config)
-    
-    ### Load Model
-    model = get_model(config)
-    
-    ### Load Optimizer
-    optimizer = get_optimizer(config, model)
-    
-    ### Construct criterions
-    criterions = construct_criterions(config)
  
     n_folds = 5
     config['num_folds'] = n_folds
@@ -47,16 +38,12 @@ def main(args):
 
     cv_train_aggregator = CrossValidationAggregator()
     cv_val_aggregator = CrossValidationAggregator()
-    
-
-
 
     ### Training 
     if args.train:
         
         ### create training data loader        
-        train_dataset = get_dataset(config, 'full')
-        val_dataset = get_dataset(config, 'full')
+        full_dataset = get_dataset(config, 'full')
 
         end_epoch = config['num_epochs']
 
@@ -71,21 +58,29 @@ def main(args):
         
         
         for fold in range(n_folds):
+                        
+            ### Load Model
+            model = get_model(config)
+            
+            ### Load Optimizer
+            optimizer = get_optimizer(config, model)
+            
+            ### Construct criterions
+            criterions = construct_criterions(config)
+
+
             print("In Validation Loop ", fold)
             
             train_indices = splits[0][fold]
             val_indices = splits[1][fold]
             
-            logger.log_fold_start(fold, train_indices, val_indices)
+            logger.log_fold_start(fold + 1, train_indices, val_indices)
             
             # Set indices for the train and validation subsets
-            train_dataset.set_indices(train_indices)
-            train_loader = DataLoader(train_dataset, batch_size=config['train_batch_size'], 
+            full_dataset.set_indices(train_indices)
+            train_loader = DataLoader(full_dataset, batch_size=config['train_batch_size'], 
                                       shuffle=True, drop_last=True)
             
-            # Similar step for validation set:
-            val_dataset.set_indices(val_indices)
-            val_loader = DataLoader(val_dataset, batch_size=config['val_batch_size'])
         
         
             ### Training Loop
@@ -98,6 +93,10 @@ def main(args):
                 cv_train_aggregator.add_data(fold=fold, epoch=e, 
                                              data=train_result)
                 
+                # Similar step for validation set:
+                full_dataset.set_indices(val_indices)
+                val_loader = DataLoader(full_dataset, batch_size=config['val_batch_size'])
+
                 ### Validation for an epoch and get the result dictionary
                 val_result = val(model, val_loader, config, criterions, val_metric_tracker)
 
@@ -108,14 +107,19 @@ def main(args):
                 new_train_result = modify_keys_for_fold(train_result, fold)
                 new_val_result = modify_keys_for_fold(val_result, fold)
                 
-                logger.log_fold_metrics(fold, {**new_train_result, **new_val_result})
+                epoch_results = {**new_train_result, **new_val_result}
+                logger.log_fold_metrics(fold + 1, epoch_results)
+            
+            del model
+            del optimizer
+            del criterions
 
-            logger.log_fold_end(fold)
+            logger.log_fold_end(fold + 1)
 
         agg_val_result = cv_val_aggregator.aggregate()
         agg_train_result = cv_train_aggregator.aggregate()
-        
-        logger.log_summary_metrics({**agg_train_result, **agg_val_result})
+        agg_results = {**agg_train_result, **agg_val_result}
+        logger.log_summary_metrics(agg_results)
         logger.save()
 
 if __name__ == "__main__":

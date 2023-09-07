@@ -51,6 +51,7 @@ from model.nn_nets.mfurln import mfurln
 from model.nn_nets.imp import imp
 from model.nn_nets.ooi_net_nenn import nenn
 from model.nn_nets.ooi_net import ooi_net
+from model.nn_nets.squat import SQUAT
 
 
 def get_model(config):
@@ -62,7 +63,8 @@ def get_model(config):
         'ooi_net': ooi_net,
         'GPNN': GPNN,
         'NENN': nenn,
-        'GraphTransformer': ooi_net
+        'GraphTransformer': ooi_net,
+        'SQUAT': SQUAT
     }
 
     model_class = model_map.get(config['model_name'])

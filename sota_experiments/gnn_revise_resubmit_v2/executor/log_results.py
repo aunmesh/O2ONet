@@ -40,9 +40,8 @@ class wandb_logger:
 
 
 import os
-import json
 import datetime
-
+import pickle
 
 
 
@@ -80,17 +79,20 @@ class CrossValidationLogger:
         fold_key = f"fold_{fold_num}"
         self.fold_data[fold_key]['end_time'] = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 
-    def log_fold_metrics(self, fold_num, **kwargs):
+
+    def log_fold_metrics(self, fold_num, metric_dict):
         """Log metrics for a fold."""
         fold_key = f"fold_{fold_num}"
-        self.fold_data[fold_key]['metrics'].append(kwargs)
+        self.fold_data[fold_key]['metrics'].append(metric_dict)
 
-    def log_summary_metrics(self, **summary_metrics):
-        self.summary_metrics = summary_metrics
+
+    def log_summary_metrics(self, summary_dict):
+        self.summary_metrics = summary_dict
+
 
     def save(self):
         """Save the experiment metadata and fold data to one file on disk."""
-        save_path = os.path.join(self.log_dir, f"{self.experiment_name}_log.json")
+        save_path = os.path.join(self.log_dir, f"{self.experiment_name}_log.pkl")
 
         # Combining metadata and fold data into one dictionary
         data_to_save = {
@@ -99,9 +101,8 @@ class CrossValidationLogger:
             'summary_metrics': self.summary_metrics
         }
 
-        with open(save_path, 'w') as file:
-            json.dump(data_to_save, file, indent=4)
-
+        with open(save_path, 'wb') as file:
+            pickle.dump(data_to_save, file)
 
 
 
