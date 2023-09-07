@@ -91,7 +91,6 @@ def main(args):
                                       shuffle=True, drop_last=True)
             
         
-        
             ### Training Loop
             for e in tqdm(range(start_epoch, end_epoch)):
 
@@ -118,7 +117,7 @@ def main(args):
                 
                 epoch_results = {**new_train_result, **new_val_result}
                 logger.log_fold_metrics(fold + 1, epoch_results)
-                            
+
             print("FLAG 1")
             logger.log_fold_end(fold + 1)
             logger.save()
