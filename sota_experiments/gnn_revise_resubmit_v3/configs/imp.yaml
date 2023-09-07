@@ -58,7 +58,7 @@ aggregator : 'mean'
 device: 'cuda:2'
 
 # root folder of the dataset
-full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_nenn_sliced.pkl'
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v5.pkl'
 split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
 
 

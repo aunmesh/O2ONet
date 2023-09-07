@@ -30,6 +30,14 @@ def main(args):
     config['split_file_id'] = args.stratified
     
     logger = CrossValidationLogger(config)
+    logger.load()  # Load the previous data
+
+    last_fold = logger.last_completed_fold()
+
+    if last_fold is not None:
+        start_fold = last_fold + 1
+    else:
+        start_fold = 1    
 
     start_epoch = 0
 
@@ -38,6 +46,15 @@ def main(args):
 
     cv_train_aggregator = CrossValidationAggregator()
     cv_val_aggregator = CrossValidationAggregator()
+
+    ### Load Model
+    model = get_model(config)
+    
+    ### Load Optimizer
+    optimizer = get_optimizer(config, model)
+    
+    ### Construct criterions
+    criterions = construct_criterions(config)
 
     ### Training 
     if args.train:
@@ -57,16 +74,8 @@ def main(args):
         f_ptr.close()        
         
         
-        for fold in range(n_folds):
+        for fold in range(start_fold -1, n_folds):
                         
-            ### Load Model
-            model = get_model(config)
-            
-            ### Load Optimizer
-            optimizer = get_optimizer(config, model)
-            
-            ### Construct criterions
-            criterions = construct_criterions(config)
 
 
             print("In Validation Loop ", fold)
@@ -109,17 +118,13 @@ def main(args):
                 
                 epoch_results = {**new_train_result, **new_val_result}
                 logger.log_fold_metrics(fold + 1, epoch_results)
-            
-            del model
-            del optimizer
-            del criterions
-
+                            
+            print("FLAG 1")
             logger.log_fold_end(fold + 1)
+            logger.save()
+            
 
-        agg_val_result = cv_val_aggregator.aggregate()
-        agg_train_result = cv_train_aggregator.aggregate()
-        agg_results = {**agg_train_result, **agg_val_result}
-        logger.log_summary_metrics(agg_results)
+        logger.aggregate()
         logger.save()
 
 if __name__ == "__main__":

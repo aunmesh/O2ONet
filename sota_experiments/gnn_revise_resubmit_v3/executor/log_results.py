@@ -61,6 +61,8 @@ class CrossValidationLogger:
         self.fold_data = {f"fold_{i + 1}": {} for i in range(self.num_folds)}
         self.summary_metrics = {}
         
+        self.save_path = os.path.join(self.log_dir, f"{self.experiment_name}_log.pkl")
+        
         # Ensure log directory exists
         if not os.path.exists(self.log_dir):
             os.makedirs(self.log_dir)
@@ -86,14 +88,42 @@ class CrossValidationLogger:
         self.fold_data[fold_key]['metrics'].append(metric_dict)
 
 
-    def log_summary_metrics(self, summary_dict):
-        self.summary_metrics = summary_dict
+
+    def data_exists(self):
+        """Check if the experiment data already exists on disk."""
+        return os.path.exists(self.save_path)
+
+
+    def load(self):
+        """Load the experiment metadata and fold data from the file on disk."""
+
+
+        if os.path.exists(self.save_path):
+
+            with open(self.save_path, 'rb') as file:
+                loaded_data = pickle.load(file)
+
+            # Loading data into class variables
+            self.experiment_metadata = loaded_data.get('metadata', {})
+            self.fold_data = loaded_data.get('fold_data', {})
+            self.summary_metrics = loaded_data.get('summary_metrics', {})
+            
+            return True  # Return True to indicate successful loading
+        else:
+            return False  # Return False to indicate data does not exist
+
+    def last_completed_fold(self):
+        """Returns the number of the last completed fold or None if no fold was completed."""
+        for fold_num in range(self.num_folds, 0, -1):  # Starting from the last fold and going backwards
+            fold_key = f"fold_{fold_num}"
+            if fold_key in self.fold_data and 'end_time' in self.fold_data[fold_key]:
+                return fold_num
+        return None
 
 
     def save(self):
         """Save the experiment metadata and fold data to one file on disk."""
-        save_path = os.path.join(self.log_dir, f"{self.experiment_name}_log.pkl")
-
+        
         # Combining metadata and fold data into one dictionary
         data_to_save = {
             'metadata': self.experiment_metadata,
@@ -101,55 +131,43 @@ class CrossValidationLogger:
             'summary_metrics': self.summary_metrics
         }
 
-        with open(save_path, 'wb') as file:
+        with open(self.save_path, 'wb') as file:
             pickle.dump(data_to_save, file)
+        temp = self.last_completed_fold()
+        if temp == None:
+            temp = 1
+        print(f"Saved experiment data for fold " + str(temp) )
 
 
+    def aggregate(self):
+        """
+        Aggregate the data and return the best epoch's data for each fold based on 'mAP_all' key.
+        """
+        best_data_per_fold = {}
+        aggregated_results = {}
 
+        # Find the best epoch for each fold
+        for fold in self.fold_data:
+            best_mAP = -float('inf')
+            best_epoch = None
 
+            # Assuming the structure of fold_data[fold] is:
+            # {epoch_1: {...}, epoch_2: {...}, ...}
+            for epoch in self.fold_data[fold]:
+                if 'metrics' not in self.fold_data[fold][epoch]:  # Skip if metrics key not present
+                    continue
+                
+                for metric_key in self.fold_data[fold][epoch]['metrics']:
+                    if 'mAP_all' in metric_key:
+                        if self.fold_data[fold][epoch]['metrics'][metric_key] > best_mAP:
+                            best_mAP = self.fold_data[fold][epoch]['metrics'][metric_key]
+                            best_epoch = epoch
 
-'''
-config = config_loader(config_file)
-wandb_log = 1
-if wandb_log ==0:
-    run_id = 'qwerty'
-if wandb_log:
-    if len(sys.argv) > 2:
-        run_id = sys.argv[2]
-    else:
-        run_id = wandb.util.generate_id()
-    print("RUN id is" + str(run_id))
-    model_saving_path = os.path.join(config['model_saving_path'],run_id)
-    os.makedirs(model_saving_path, exist_ok=True)
-    wandb.init(project="eccv_22_gcn", entity="cdeslab_ooi_interaction", id=run_id, resume="allow", config=config)
-wandb.config.update({"run_id": run_id})
+            best_data_per_fold[fold] = self.fold_data[fold][best_epoch]['metrics']
 
-if wandb_log:
-    wandb.watch(ooi_net_1, log_freq=1)
+        # Aggregate the data of the best epoch for each fold
+        keys = best_data_per_fold[list(best_data_per_fold.keys())[0]].keys()
+        for key in keys:
+            aggregated_results['Agg_' + key] = sum([best_data_per_fold[fold][key] for fold in best_data_per_fold]) / len(best_data_per_fold)
 
-
-
-    if wandb_log:
-        
-        loss_dict_train = {"train_loss": loss['all'], "train_loss_scr": loss['scr'],
-                        "train_loss_mr": loss['mr'], "train_loss_lr": loss['lr']}
-        
-        
-        loss_dict_val = {"val_loss": val_loss['all'], "val_loss_scr": val_loss['scr'], 
-                   "val_loss_mr": val_loss['mr'], "val_loss_lr": val_loss['lr']}
-
-        val_lr_tables = make_lr_tables(val_metrics_cm['val_cm_lr'], 'val')
-        val_mr_tables = make_mr_tables(val_metrics_cm['val_cm_mr'], 'val')
-        val_scr_tables = make_scr_tables(val_metrics_cm['val_cm_scr'], 'val')
-
-        train_lr_tables = make_lr_tables(train_metrics_cm['train_cm_lr'], 'train')
-        train_mr_tables = make_mr_tables(train_metrics_cm['train_cm_mr'], 'train')
-        train_scr_tables = make_scr_tables(train_metrics_cm['train_cm_scr'], 'train')
-
-        log_dict = {**loss_dict_train, **train_metrics, **loss_dict_val, **val_metrics, **train_lr_tables
-                    ,**train_mr_tables, **train_scr_tables, **val_lr_tables, **val_mr_tables, 
-                    **val_scr_tables}
-
-        wandb.log(log_dict)
-
-'''
+        self.summary_metrics = aggregated_results
