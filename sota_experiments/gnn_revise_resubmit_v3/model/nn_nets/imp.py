@@ -17,9 +17,11 @@ class imp(torch.nn.Module):
         self.config = config.copy()      
         
         
-        hidden_size = 128
+        hidden_size = self.config['message_size']
+        
         self.classifier_input_dimension = hidden_size
-        self.node_transform = self.make_linear_layer([config['node_feature_size'], 512, hidden_size])
+        
+        self.node_transform = self.make_linear_layer([config['node_feature_size'], hidden_size])
         self.edge_transform = self.make_linear_layer([config['edge_feature_size'], hidden_size])
         
         self.node_gru = torch.nn.GRU(hidden_size,hidden_size, batch_first=True)
@@ -30,29 +32,26 @@ class imp(torch.nn.Module):
         
         # creating the cr classifier
         cr_dim = self.config['cr_dimensions']
-        cr_dim[0] = 2*hidden_size
+
         scr_dropout = self.config['cr_dropout']
 
         self.cr_cls = relation_classifier_2(cr_dim, scr_dropout,
                                             self.config['device'], 1)
-        self.cr_softmax = torch.nn.Softmax(dim=-1)
+
 
         # creating the lr classifier
         lr_dim = self.config['lr_dimensions']
-        lr_dim[0] = 2*hidden_size
+
         lr_dropout = self.config['lr_dropout']
         self.lr_cls = relation_classifier_2(
             lr_dim, lr_dropout, self.config['device'], 1)
 
         # creating the mr classifier
         mr_dim = self.config['mr_dimensions']
-        mr_dim[0] = 2*hidden_size
+
         mr_dropout = self.config['mr_dropout']
         self.mr_cls = relation_classifier_2(
             mr_dim, mr_dropout, self.config['device'], 1)
-
-        # Hyperparameters to process node embeddings for classification
-        self.agg = self.config['aggregator']
 
 
     def make_linear_layer(self, dimensions):
@@ -147,7 +146,7 @@ class imp(torch.nn.Module):
 
         classifier_input = torch.zeros(
                                         num_batches, num_pairs, 
-                                        2*self.classifier_input_dimension, 
+                                        3 * self.config['message_size'], 
                                         device=self.config['device']
                                        )
         
@@ -161,13 +160,12 @@ class imp(torch.nn.Module):
                 ind0, ind1 = pairs[b, i, 0], pairs[b, i, 1]
                 emb0, emb1 = node_embeddings[b, ind0], node_embeddings[b, ind1]
                 
-                classifier_input[b, i, :half_dimension] = aggregate(emb0, emb1, self.agg)
+                classifier_input[b, i, :2 * self.config['message_size'] ] = aggregate(emb0, emb1, 'concat')
                 
                 embed1 = edge_embeddings[b, ind0, ind1, :]
                 embed2 = edge_embeddings[b, ind1, ind0, :]
-                
-                
-                classifier_input[b, i, half_dimension:] = aggregate(embed1, embed2, self.agg)
+                                
+                classifier_input[b, i, 2 * self.config['message_size']:] = aggregate(embed1, embed2, 'mean')
 
         return classifier_input
 

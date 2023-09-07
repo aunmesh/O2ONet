@@ -2,7 +2,7 @@ train_batch_size: 32
 val_batch_size: 32
 test_batch_size: 32
 
-num_epochs: 20
+num_epochs: 25
 lr: .001
 
 features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
@@ -44,13 +44,13 @@ overfit: False
 
 model_saving_path: '/workspace/work/results_ICRA_gpnn/'
 
-cr_dimensions : [256, 3]
+cr_dimensions : [768, 3]
 cr_dropout : 0.15
 
-lr_dimensions : [256, 5]
+lr_dimensions : [768, 5]
 lr_dropout : 0.15
 
-mr_dimensions : [256, 14]
+mr_dimensions : [768, 14]
 mr_dropout : 0.15
 aggregator : 'mean'
 
@@ -58,7 +58,7 @@ aggregator : 'mean'
 device: 'cuda:2'
 
 # root folder of the dataset
-full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v4.pkl'
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_nenn_sliced.pkl'
 split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
 
 
@@ -69,10 +69,11 @@ comments: 'None'
 wandb_project_name: 'revise_resubmit_imp'
 wandb_entity: 'aunmesh'
 
-log_results: True
+log_results: False
 streams: ['combined']
 
 best_model_selection_key: 'val_combined_mAP_all'
 
 edge_feature_size: 1087
 node_feature_size: 3130
+message_size: 256

@@ -39,7 +39,7 @@ save_epoch: 5
 
 loss: 'masked loss'
 
-model_name: 'SQUAT'
+model_name: 'MLP'
 overfit: False
 
 model_saving_path: '/workspace/work/ral_gpnn/'
@@ -61,7 +61,7 @@ split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
 
 # relative location of the annotations file
 
-device: 'cuda:1'
+device: 'cuda:0'
 
 gif_size: 11
 
@@ -69,7 +69,7 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'resubmit_squat'
+wandb_project_name: 'resubmit_mlp'
 wandb_entity: 'aunmesh'
 
 log_results: False

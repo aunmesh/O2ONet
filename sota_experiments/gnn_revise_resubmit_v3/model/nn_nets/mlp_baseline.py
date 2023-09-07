@@ -63,7 +63,7 @@ class MLP(torch.nn.Module):
         # each row has to correspond to the given pair of objects
         # using the pair of objects we can get the features
         
-        feat_dim = 2 * edge_embeddings.shape[-1]
+        feat_dim = 3 * edge_embeddings.shape[-1]
         num_pairs = pairs.shape[1]   # Always equal to max pairs
         num_batches = edge_embeddings.shape[0]
 
@@ -87,8 +87,10 @@ class MLP(torch.nn.Module):
                 emb0 = edge_embeddings[b, ind0, ind1]
                 emb1 = edge_embeddings[b, ind1, ind0]
                 
-                classifier_input[b, i, :feat_dim//2] = aggregate(emb0, emb1, self.agg)
-                classifier_input[b, i, feat_dim//2:] = aggregate(n1, n2, self.agg)
+                
+                classifier_input[b, i, :2 * edge_embeddings.shape[-1]] = aggregate(n1, n2, 'concat')
+                classifier_input[b, i, 2 * edge_embeddings.shape[-1]:] = aggregate(emb0, emb1, 'mean')
+                
                 # classifier_input[b, i, :] = aggregate(emb0, emb1, 'concat')
                 
         return classifier_input, num_pairs
