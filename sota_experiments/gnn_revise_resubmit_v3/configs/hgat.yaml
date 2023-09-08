@@ -1,0 +1,103 @@
+train_batch_size: 32
+val_batch_size: 32
+test_batch_size: 32
+
+num_epochs: 10
+lr: .001
+
+
+features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
+                'object_semantic_embeddings', 'object_centric_shape_feats']
+
+relative_features_list: ['relative_spatial_feature', 'interaction_bbox_CLIP', 
+                        'interaction_centric_shape_feats']
+
+
+custom_filter_dict:
+
+    'geometric_feature':
+      frame_dim : 1
+      frame_index : 5
+
+    'object_centric_shape_feats':
+      frame_dim : 1
+      frame_index : 5
+
+    'object_i3d_feature':
+      frame_dim : 0
+      frame_index : 2
+
+    'motion_feature':
+      frame_dim : 1
+      frame_index : 5
+
+
+optimizer: 'Adam'
+
+# After how many epochs to save the model
+save_epoch: 5
+
+loss: 'masked loss'
+
+model_name: 'hgat'
+GNN: 'GATv2Conv'
+# GNN: 'GATv2Conv'
+
+
+overfit: False
+
+model_saving_path: '/workspace/work/results_ICRA_gpnn/'
+
+
+edge_feature_size: 1087
+node_feature_size: 3130
+
+
+# Neural Network dimensions
+node_gnn_dimensions: [3130, 256]
+node_gnn_dropout : 0.15
+
+triplet_gnn_dimensions: [1087, 256]
+triplet_gnn_dropout : 0.15
+
+
+cr_dimensions : [768, 3]
+cr_dropout : 0.15
+
+lr_dimensions : [768, 5]
+lr_dropout : 0.15
+
+mr_dimensions : [768, 14]
+mr_dropout : 0.15
+aggregator : 'mean'
+
+# field to distinguish from different datasets (depending on gif length)
+device: 'cuda:1'
+
+# root folder of the dataset
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_with_nenn.pkl'
+split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
+
+
+iou_threshold: 0.5
+dis_threshold: 0.5
+max_num_edges: 144
+
+gif_size: 11
+
+loss_calculation: 'masked'
+comments: 'None'
+
+# wandb_configs
+wandb_project_name: 'revise_resubmit_hgat'
+wandb_entity: 'aunmesh'
+
+log_results: False
+streams: ['combined']
+
+best_model_selection_key: 'val_combined_mAP_all'
+
+
+edge_feature_size: 1087
+node_feature_size: 3130
+message_size: 256

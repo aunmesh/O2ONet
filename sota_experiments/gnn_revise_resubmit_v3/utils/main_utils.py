@@ -43,13 +43,17 @@ def get_metric_trackers(config):
 from model.nn_nets.imp import imp
 from model.nn_nets.squat import SQUAT
 from model.nn_nets.mlp_baseline import MLP
+from model.nn_nets.hgat import hgat
+from model.nn_nets.graph_rcnn import graph_rcnn
 
 def get_model(config):
     model_map = {
         'imp': imp,
         'GPNN': GPNN,
         'SQUAT': SQUAT,
-        'MLP': MLP
+        'MLP': MLP,
+        'hgat': hgat,
+        'graph_rcnn': graph_rcnn
     }
 
     model_class = model_map.get(config['model_name'])
