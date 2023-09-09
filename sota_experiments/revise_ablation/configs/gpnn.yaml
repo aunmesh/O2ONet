@@ -1,0 +1,92 @@
+train_batch_size: 32
+val_batch_size: 32
+test_batch_size: 32
+
+num_epochs: 2
+lr: .001
+
+features_list: ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
+                'object_semantic_embeddings', 'object_centric_shape_feats']
+
+relative_features_list: ['relative_spatial_feature', 'interaction_bbox_CLIP', 
+                        'interaction_centric_shape_feats']
+
+# ablated_feat: 'None'
+ablated_feat: 'object_i3d_feature'
+
+best_model_selection_key : 'val_combined_mAP_all'
+
+custom_filter_dict:
+
+    'geometric_feature':
+      frame_dim : 1
+      frame_index : 5
+
+    'object_centric_shape_feats':
+      frame_dim : 1
+      frame_index : 5
+
+    'object_i3d_feature':
+      frame_dim : 0
+      frame_index : 2
+
+    'motion_feature':
+      frame_dim : 1
+      frame_index : 5
+
+optimizer: 'Adam'
+
+# After how many epochs to save the model
+save_epoch: 5
+
+loss: 'masked loss'
+
+model_name: 'GPNN'
+GNN: 'GPNN'
+overfit: False
+
+model_saving_path: '/workspace/work/misc/O2ONet/sota_experiments/revise_ablation/saved_model'
+
+# Neural Network dimensions
+cr_dimensions : [768, 3]
+cr_dropout : 0.15
+
+lr_dimensions : [768, 5]
+lr_dropout : 0.15
+
+mr_dimensions : [768, 14]
+mr_dropout : 0.15
+
+# root folder of the dataset
+#full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v5.pkl'
+full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v5.pkl'
+split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
+
+# relative location of the annotations file
+
+device: 'cuda:3'
+
+gif_size: 11
+
+loss_calculation: 'masked'
+comments: 'None'
+
+# wandb_configs
+wandb_project_name: 'resubmit_gpnn'
+wandb_entity: 'aunmesh'
+
+log_results: True
+streams: ['combined']
+
+# model args for gpnn
+'edge_feature_size': 1087
+'node_feature_size': 3130
+'message_size': 256
+'link_hidden_size': 256 
+'link_hidden_layers': 1
+'link_relu': False
+'update_hidden_layers': 1
+'update_dropout': 0.1
+'update_bias': True
+'propagate_layers': 1
+'resize_feature_to_message_size': True

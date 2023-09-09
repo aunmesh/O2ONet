@@ -168,7 +168,7 @@ class CrossValidationLogger:
         
         # Aggregate the data of the best epoch for each fold
         keys = best_data_per_fold[list(best_data_per_fold.keys())[0]].keys()
-        print(keys)
+
         for key in keys:
             temp_key = key[7:]
             # print("flag", key, temp_key)

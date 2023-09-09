@@ -30,6 +30,21 @@ class ooi_net(nn.Module):
         super(ooi_net, self).__init__()
         self.config = config
 
+
+        self.edge_feature_resize = torch.nn.Linear(
+            config['edge_feature_size'],
+            config['message_size']
+        ).to(config['device'])
+
+        self.node_feature_resize = torch.nn.Linear(
+            config['node_feature_size'],
+            config['message_size']
+        ).to(config['device'])
+
+        torch.nn.init.xavier_normal(self.edge_feature_resize.weight)
+        torch.nn.init.xavier_normal(self.node_feature_resize.weight)
+
+
         # creating the gcn
         self.device = config['device']
         
@@ -42,32 +57,29 @@ class ooi_net(nn.Module):
 
         # creating the scr classifier
         cr_dim = config['cr_dimensions']
-        cr_dim[0] += self.config['edge_feature_size']
         
         scr_dropout = config['cr_dropout']
         self.cr_cls = relation_classifier(cr_dim, scr_dropout, self.device)
 
         # creating the mr classifier
         lr_dim = config['lr_dimensions']
-        lr_dim[0] += self.config['edge_feature_size']
         
         lr_dropout = config['lr_dropout']
         self.lr_cls = relation_classifier(lr_dim, lr_dropout, self.device)
 
         # creating the lr classifier
         mr_dim = config['mr_dimensions']
-        mr_dim[0] += self.config['edge_feature_size']
         
         mr_dropout = config['mr_dropout']
         self.mr_cls = relation_classifier(mr_dim, mr_dropout, self.device)
         
         
         # Hyperparameters to process node embeddings for classification
-        self.agg = config['aggregator']
+
         self.classifier_input_dimension = gcn_dim[-1] + self.config['edge_feature_size']
 
 
-    def make_classifier_inputs(self, node_embeddings, pairs, edge_embeddings):
+    def make_classifier_inputs(self, obj_ft, node_embeddings, pairs, edge_embeddings):
         '''
         makes the classifier input from the node embeddings and pairs
 
@@ -91,7 +103,7 @@ class ooi_net(nn.Module):
         # classifier_input is the tensor which will be passed to the fully connected classifier
         # for feature classification
         classifier_input = torch.empty(
-            num_batches, num_pairs, self.classifier_input_dimension, device=self.device)
+            num_batches, num_pairs, 3* self.config['message_size'], device=self.device)
 
         for b in range(num_batches):
 
@@ -99,11 +111,23 @@ class ooi_net(nn.Module):
 
                 ind0, ind1 = pairs[b, i, 0], pairs[b, i, 1]
 
-                edge_embedding = edge_embeddings[b, ind0, ind1, :]
+                edge_embedding_1 = edge_embeddings[b, ind0, ind1, :]
+                edge_embedding_2 = edge_embeddings[b, ind1, ind0, :]
+                
+                temp_e = aggregate(edge_embedding_1, edge_embedding_2, 'mean')	
+
+                classifier_input[b, i, 2 * self.config['message_size']:] = temp_e
                 
                 emb0, emb1 = node_embeddings[b, ind0], node_embeddings[b, ind1]
-                classifier_input[b, i] = torch.cat((aggregate(emb0, emb1, self.agg), 
-                                                    edge_embedding), dim=0)
+                temp_n1 = aggregate(emb0, emb1, 'concat')
+                
+                emb0, emb1 = obj_ft[b, ind0], obj_ft[b, ind1]
+                temp_n2 = aggregate(emb0, emb1, 'concat')                
+                
+                temp_n = aggregate(temp_n1, temp_n2, 'mean')
+                
+                classifier_input[b, i, :2*self.config['message_size']] = temp_n
+
 
         return classifier_input
 
@@ -121,6 +145,11 @@ class ooi_net(nn.Module):
                     The keys point to results of mr, lr and scr classification.
         '''
         obj_features = data_item['concatenated_node_features']
+        edge_features = data_item['interaction_feature']
+        
+        obj_ft = self.node_feature_resize(obj_features)
+        edge_ft = self.edge_feature_resize(edge_features)
+        
         edge_index = data_item['edge_index']
         
         collated_obj_features, node_slices = collate_node_features(obj_features, data_item['num_obj'],
@@ -138,10 +167,10 @@ class ooi_net(nn.Module):
         obj_embeddings = decollate_node_embeddings(
             all_obj_embeddings, node_slices, self.device)
 
-        edge_embeddings = data_item['interaction_feature']
         
-        classifier_input = self.make_classifier_inputs(
-            obj_embeddings, data_item['object_pairs'], edge_embeddings)
+        
+        classifier_input = self.make_classifier_inputs( obj_ft,
+            obj_embeddings, data_item['object_pairs'], edge_ft)
         
         num_pairs = data_item['object_pairs'].shape[1]
         

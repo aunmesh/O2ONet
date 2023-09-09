@@ -45,6 +45,8 @@ from model.nn_nets.squat import SQUAT
 from model.nn_nets.mlp_baseline import MLP
 from model.nn_nets.hgat import hgat
 from model.nn_nets.graph_rcnn import graph_rcnn
+from model.nn_nets.ooi_net_nenn import nenn
+from model.nn_nets.ooi_net import ooi_net
 
 def get_model(config):
     model_map = {
@@ -53,7 +55,9 @@ def get_model(config):
         'SQUAT': SQUAT,
         'MLP': MLP,
         'hgat': hgat,
-        'graph_rcnn': graph_rcnn
+        'graph_rcnn': graph_rcnn,
+        'NENN': nenn,
+        'GraphTransformer': ooi_net,
     }
 
     model_class = model_map.get(config['model_name'])

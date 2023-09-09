@@ -34,6 +34,20 @@ class nenn(nn.Module):
         
         self.config = config
 
+
+        self.edge_feature_resize = torch.nn.Linear(
+            config['edge_feature_size'],
+            config['message_size']
+        ).to(config['device'])
+
+        self.node_feature_resize = torch.nn.Linear(
+            config['node_feature_size'],
+            config['message_size']
+        ).to(config['device'])
+
+        torch.nn.init.xavier_normal(self.edge_feature_resize.weight)
+        torch.nn.init.xavier_normal(self.node_feature_resize.weight)
+
         # creating the gcn
         self.device = config['device']
         self.nenn = NENN(config)
@@ -59,7 +73,7 @@ class nenn(nn.Module):
 
 
 
-    def make_classifier_inputs(self, node_embeddings, pairs, edge_embeddings):
+    def make_classifier_inputs(self, node_features, edge_features, node_embeddings, pairs, edge_embeddings):
         '''
         makes the classifier input from the node embeddings and pairs
 
@@ -83,7 +97,7 @@ class nenn(nn.Module):
         # classifier_input is the tensor which will be passed to the fully connected classifier
         # for feature classification
         classifier_input = torch.empty(
-            num_batches, num_pairs, self.classifier_input_dimension, device=self.device)
+            num_batches, num_pairs, 3*self.config['message_size'], device=self.device)
 
         for b in range(num_batches):
 
@@ -91,11 +105,27 @@ class nenn(nn.Module):
 
                 ind0, ind1 = pairs[b, i, 0], pairs[b, i, 1]
 
-                edge_embedding = edge_embeddings[b, ind0, ind1, :]
+                edge_embedding_1 = edge_embeddings[b, ind0, ind1, :]
+                edge_embedding_2 = edge_embeddings[b, ind1, ind0, :]
+                temp_e1 = aggregate(edge_embedding_1, edge_embedding_2, 'mean')
+                
+                edge_embedding_1 = edge_features[b, ind0, ind1, :]
+                edge_embedding_2 = edge_features[b, ind1, ind0, :]
+                temp_e2 = aggregate(edge_embedding_1, edge_embedding_2, 'mean')
+                
+                temp_e = aggregate(temp_e1, temp_e2, 'mean')
+
+                classifier_input[b, i, 2*self.config['message_size']: ] = temp_e
                 
                 emb0, emb1 = node_embeddings[b, ind0], node_embeddings[b, ind1]
-                classifier_input[b, i] = torch.cat((aggregate(emb0, emb1, self.agg), 
-                                                    edge_embedding), dim=0)
+                temp_n1 = aggregate(emb0, emb1, 'concat')
+                
+                emb0, emb1 = node_features[b, ind0], node_features[b, ind1]
+                temp_n2 = aggregate(emb0, emb1, 'concat')                
+                
+                temp_n = aggregate(temp_n1, temp_n2, 'mean')
+                
+                classifier_input[b, i, :2*self.config['message_size']] = temp_n
 
         return classifier_input
 
@@ -121,6 +151,8 @@ class nenn(nn.Module):
         line_adj_matrix = data_item['line_adj_mat']
         adj_matrix = data_item['adj_mat']
         
+        node_feat = self.node_feature_resize(node_features)
+        edge_feat = self.edge_feature_resize(edge_features)
         
         b_size, num_unmasked_objects = node_features.shape[0], node_features.shape[1]
 
@@ -156,7 +188,7 @@ class nenn(nn.Module):
             all_edge_embeddings[b] = temp_edge_embedding
 
 
-        classifier_input = self.make_classifier_inputs(
+        classifier_input = self.make_classifier_inputs(node_feat, edge_feat,
             all_node_embeddings, obj_pairs, all_edge_embeddings)
 
         predictions = {}
