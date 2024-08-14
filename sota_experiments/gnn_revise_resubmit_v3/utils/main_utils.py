@@ -67,9 +67,18 @@ def get_model(config):
         raise ValueError(f"Unknown model name: {config['model_name']}")
 
 
+from dataloader.dataset import dataset as dataset_non_split
+from dataloader.dataset_non_strat import dataset as dataset_split
+
+
 def get_dataset(config, split='train'):
 
-    return dataset(config, split)
+    if split != 'inference':
+        return dataset_split(config, split)
+
+    if split=='inference':
+        return dataset_non_split(config, split)
+    
 
 
 def freeze_layers(model, freezing_list):

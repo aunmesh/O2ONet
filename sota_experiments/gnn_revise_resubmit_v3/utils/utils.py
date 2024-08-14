@@ -138,6 +138,14 @@ def get_parser():
                         default=True, 
                         help='bool for training'
                         )
+
+    parser.add_argument('--inference_folder_location',
+                        type=str, 
+                        default="/workspace/work/misc/O2ONet/sota_experiments/gnn_revise_resubmit_v3/inference_folder", 
+                        help='folder where the gifs are stored for inference'
+                        )
+
+
     
     parser.add_argument('--stratified',
                         type=int, 

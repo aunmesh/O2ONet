@@ -57,8 +57,8 @@ mr_dropout : 0.15
 
 # root folder of the dataset
 #full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v5.pkl'
-full_dataset_location: '/workspace/data/data_folder/o2o/ral_features/formatted_features/revise_resubmit_v5.pkl'
-split_dict_location: '/workspace/data/data_folder/o2o/split_dict.pkl'
+full_dataset_location: '/workspace/work/server_data_backup/o2o_/features_filtered/revise_resubmit_v5.pkl'
+split_dict_location: '/workspace/work/server_data_backup/o2o_/split_dict.pkl'
 
 # relative location of the annotations file
 
@@ -70,10 +70,10 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'resubmit_gpnn'
+wandb_project_name: 'chi_2025_preparation'
 wandb_entity: 'aunmesh'
 
-log_results: False
+log_results: True
 streams: ['combined']
 
 # model args for gpnn
