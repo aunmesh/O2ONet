@@ -34,19 +34,22 @@ def get_indices_map(temp_dataset, gif_names):
 
     for n in gif_names:
         names_to_indices_map[n] = None
+    
+    # data_gif_names = []
+    
+    for i, d in enumerate(temp_dataset):
 
-    for i, d_ in enumerate(temp_dataset):
-        d = d_[0]
         yt_id = d['metadata']['yt_id']
         frame_no = d['metadata']['frame no.']
         
         temp_key = yt_id + '_' + frame_no
         temp_str = temp_key + '_5.gif'
-        print(temp_str)
+        # data_gif_names.append(temp_str)
+        
         if temp_str in gif_names:
             names_to_indices_map[temp_key] = i    
 
-    del names_to_indices_map
+    return names_to_indices_map
 
 def main(args):
     torch.set_default_dtype(torch.float)  # For Float
@@ -72,8 +75,13 @@ def main(args):
     #     config = logger.config
 
     ### Creating the test data loader
-    full_dataset = get_dataset(config, 'inference')
-    
+    full_dataset__ = get_dataset(config, 'inference')
+    l_ = len(full_dataset__)
+
+
+    full_dataset = [full_dataset__[i][0] for i in range(l_)]
+    del full_dataset__    
+
     # How are we getting the inference set now. Now we are getting it using the 
     # How do we want to define the inference set eventually. Eventually we just want to put the inference gifs inside a folder and the whole process of inference
     # should happen.
@@ -89,8 +97,9 @@ def main(args):
     gif_folder_loc = args.inference_folder_location
     
     gif_files = get_gif_files(gif_folder_loc)
+    print("FLAG 95", gif_files)
     gif_to_ind_map = get_indices_map(full_dataset, gif_files)
-    
+    print("FLAG 97", gif_to_ind_map)
         
     indices_available = []
     for k in gif_to_ind_map.keys():
@@ -100,15 +109,15 @@ def main(args):
 
     from torch.utils.data import DataLoader, Subset
 
-    # Custom collate function to combine dictionary items in a batch
-    def collate_fn(batch):
-        return {key: torch.stack([item[key] for item in batch]) for key in batch[0].keys()}
+    # # Custom collate function to combine dictionary items in a batch
+    # def collate_fn(batch):
+    #     return {key: torch.stack([item[key] for item in batch]) for key in batch[0].keys()}
 
     # Create a subset of the dataset using the indices
     subset = Subset(full_dataset, indices_available)
+    print("FLAG SPEC", type(subset[0]))
 
-
-    dataloader = DataLoader(subset, batch_size=len(indices_available), shuffle=False, collate_fn=collate_fn)
+    dataloader = DataLoader(subset, batch_size=len(indices_available), shuffle=False)
     
     model = model.eval()
 
