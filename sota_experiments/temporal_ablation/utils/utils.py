@@ -139,10 +139,17 @@ def get_parser():
                         help='bool for training'
                         )
     
+    parser.add_argument('--num_frames',
+                        type=int, 
+                        default=11, 
+                        help='bool for training'
+                        )
+
+
     # /workspace/work/misc/O2ONet/sota_experiments/revise_ablation/configs/gpnn_ablation.yaml
     
     parser.add_argument('--config',
-                        default="/workspace/work/misc/O2ONet/sota_experiments/revise_ablation/configs/gpnn_ablation.yaml",
+                        default="/workspace/work/misc/O2ONet/sota_experiments/temporal_ablation/configs/gpnn_ablation.yaml",
                         type=str)
     
     parser.add_argument('--gpu',
@@ -167,12 +174,6 @@ def get_parser():
                         )
 
     parser.add_argument('--run_id',
-                        type=str, 
-                        default='', 
-                        help='bool for training'
-                        )
-
-    parser.add_argument('--ablated_feat',
                         type=str, 
                         default='', 
                         help='bool for training'
@@ -219,6 +220,7 @@ def convert_tensor_values_to_float(input_dict):
     return output_dict
 
 
+
 def process_data_for_fpass(data_item, config):
       
     data_item['num_relation'] = data_item['num_relation'].to(config['device'])
@@ -233,7 +235,6 @@ def process_data_for_fpass(data_item, config):
     # Padded features
     obj_features = []
 
-    ablation_key = config['ablated_feat']
 
     for f in config['features_list']:
         
@@ -250,15 +251,11 @@ def process_data_for_fpass(data_item, config):
                                                     index = frame_index
                                                 ).squeeze().to(config['device'])
 
-            # if ablation_key == f:
-            #     temp_feat = permute_last_dim(temp_feat, config)
             
             obj_features.append(temp_feat)
         
         else:
             temp_feat = data_item[f].to(config['device'])
-            # if ablation_key == f:
-            #     temp_feat = permute_last_dim(temp_feat, config)
             
             obj_features.append(temp_feat)
     
@@ -268,17 +265,31 @@ def process_data_for_fpass(data_item, config):
 
     interaction_centric_features = []
     
+    num_frames = config['num_frames']
+    hws = (num_frames - 1) // 2
     
     for f in config['relative_features_list']:
-
-        temp_feat = data_item[f].flatten(3).to(config['device'])
         
+        if f == 'relative_spatial_feature':	
+            
+            temp_feat = data_item[f][:,:, :, 5-hws:5+hws+1, :].to(config['device'])
+            temp_feat = temp_feat.flatten(3).to(config['device'])
+
+        ################### START HERE ############################
+        # interaction_centric_shape_feats torch.Size([12, 12, 11, 9])
+        
+        elif f == 'interaction_centric_shape_feats':	
+            temp_feat = data_item[f][:,:, :, 5-hws:5+hws+1, :].to(config['device'])
+            temp_feat = temp_feat.flatten(3).to(config['device'])
+        
+        else:
+            temp_feat = data_item[f].flatten(3).to(config['device'])            
+
         interaction_centric_features.append(temp_feat)
 
     data_item['interaction_feature'] = torch.cat(interaction_centric_features, 3)
     
     data_item = convert_tensor_values_to_float(data_item)
-    
     
     return data_item
 

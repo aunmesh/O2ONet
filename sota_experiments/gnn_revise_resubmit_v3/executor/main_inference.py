@@ -51,6 +51,77 @@ def get_indices_map(temp_dataset, gif_names):
 
     return names_to_indices_map
 
+
+
+def format_output(predictions, target):
+    '''
+    predictions : list of dimension [b_size, max_num_obj_pairs, num_classes]
+    target      : list of dimension [b_size, max_num_obj_pairs, num_classes]
+                  they correspond with the predictions
+    '''
+
+    mask = target['num_relation']
+
+    keys = ['cr', 'lr', 'mr']
+
+    b_size = target['lr'].shape[0]
+    tot_num_rels = 0
+    
+    cr_map = {'Contact': 0, 'No Contact': 1, 'None of these': 2, '': 2}
+    lr_map = {'Below/Above': 0, 'Behind/Front': 1, 'Left/Right': 2, 'Inside': 3, 'None of these': 4, '': 4}
+    mr_map = {'Holding': 0, 'Carrying': 1, 'Adjusting': 2, 'Rubbing': 3, 'Sliding': 4, 'Rotating': 5, 'Twisting': 6,
+              'Raising': 7, 'Lowering': 8, 'Penetrating': 9, 'Moving Toward': 10, 'Moving Away': 11, 
+              'Negligible Relative Motion': 12, 'None of these': 13, '': 13}
+        
+    all_predictions = {}
+
+    for b in range(b_size):
+        
+        curr_num_rel = int(mask[b])
+        tot_num_rels+=curr_num_rel
+        
+        temp_predictions = {}
+        predicted_rels = []
+        for k in keys:
+            temp_predictions = predictions['combined'][k][b, :curr_num_rel, :]
+            
+            # Apply the squashing functions appropriately to get the probabilities
+            if k!='cr':
+                temp_predictions = torch.sigmoid(temp_predictions)
+            
+            if k=='cr':
+                temp_predictions = torch.nn.functional.softmax(temp_predictions, dim=-1)
+    
+    # We want to convert the results into the text
+    
+    # How is the whole thing working. Are we stacking up the tensors as we need them?
+    # From the GNN, Are we stacking up the tensors, as they are needed?
+    # How are they being stacked? They are being stacked according to the ground truth. More specifically they
+    # are being stacked according to the pairs matrix. So we also need the pairs matrix, to realize how they were stacked.
+    
+    # So, what is the output. One we can convert this tensor to the words. But then we will have to assign the words to the concerned object
+    # pair and then display that.
+    
+    # It is not a complex task and can be done fast.
+    
+    # So, 1st just convert the detections to words.
+    
+    # So, what will the output look like:
+    # For each pair, we can have a dictionary which classifies all the outputs.
+    
+    # Then depending on the number of pairs annotated there will be a list of dictionaries for each gif in a batch.
+    # Then depending on the batch size there will be a list of lists
+    # So finally it is a list of lists of dictionary [[{}, {}]]
+            
+            
+    
+    
+    
+    
+    return loss
+
+
+
 def main(args):
     torch.set_default_dtype(torch.float)  # For Float
 
@@ -108,10 +179,6 @@ def main(args):
     
 
     from torch.utils.data import DataLoader, Subset
-
-    # # Custom collate function to combine dictionary items in a batch
-    # def collate_fn(batch):
-    #     return {key: torch.stack([item[key] for item in batch]) for key in batch[0].keys()}
 
     # Create a subset of the dataset using the indices
     subset = Subset(full_dataset, indices_available)

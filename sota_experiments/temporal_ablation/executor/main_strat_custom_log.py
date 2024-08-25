@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/workspace/work/misc/O2ONet/sota_experiments/revise_ablation/")
+sys.path.append("/workspace/work/misc/O2ONet/sota_experiments/temporal_ablation/")
 import os
 from utils.utils import get_parser, config_loader
 from train import train
@@ -21,15 +21,20 @@ from utils.stratify import modify_keys_for_fold
 
 
 tensor_dims = {
-    "object_i3d_feature": 2048,
-    "bbox_CLIP": 768,
-    "geometric_feature": 5,
-    "object_semantic_embeddings": 300,
-    "object_centric_shape_feats": 9,
-    "relative_spatial_feature": 220,
-    "interaction_bbox_CLIP": 768,
-    "interaction_centric_shape_feats": 99
+    "relative_spatial_feature": 20,
 }
+
+
+# object_i3d_feature torch.Size([5, 12, 2048])
+# bbox_CLIP torch.Size([12, 768])
+# geometric_feature torch.Size([12, 11, 5])
+# object_semantic_embeddings torch.Size([12, 300])
+# object_centric_shape_feats torch.Size([12, 11, 9])
+    
+# relative_spatial_feature torch.Size([12, 12, 11, 20])
+# interaction_bbox_CLIP torch.Size([12, 12, 768])
+# interaction_centric_shape_feats torch.Size([12, 12, 11, 9])
+
 
 # CLIP, i3d, shape, word2vec, bbox_geometric 
 
@@ -39,53 +44,16 @@ def main(args):
     config = config_loader(args.config)
     config['device'] = torch.device("cuda:" + str(args.gpu))
     
-    config['ablated_feat'] = args.ablated_feat
+    config['num_frames'] = int(args.num_frames)
     
-    if config['ablated_feat'] != 'bbox_geometric':
-        for f in config['features_list']:
-            if config['ablated_feat'] in f:
-                config['features_list'].remove(f)
+    shift_rel_spa = 20 * (11 - config['num_frames'])
+    shift_int_cent_sha = 9 * (11 - config['num_frames'])
+    config['edge_feature_size'] -= (shift_rel_spa + shift_int_cent_sha)
+    # shift_geom = 5 * (11 - config['num_frames'])
+    # shift_obj_cent = 9 * (11 - config['num_frames'])
+    # config['node_feature_size'] -= (shift_geom + shift_obj_cent)
 
-                req_dim = tensor_dims[f]
-                config['node_feature_size']-=req_dim
-
-        for f in config['relative_features_list']:
-            if config['ablated_feat'] in f:
-                config['relative_features_list'].remove(f)
-
-                req_dim = tensor_dims[f]
-                config['edge_feature_size']-=req_dim
-
-
-    if config['ablated_feat'] == 'bbox_geometric':
-        
-        f = 'geometric_feature'
-        config['features_list'].remove(f)
-
-        req_dim = tensor_dims[f]
-        config['node_feature_size']-=req_dim
-
-        f = 'relative_spatial_feature'
-        config['relative_features_list'].remove(f)
-
-        req_dim = tensor_dims[f]
-        config['edge_feature_size']-=req_dim
-
-
-
-    # if config['ablated_feat'] in config['features_list']:
-    #     config['features_list'].remove(config['ablated_feat'])
-        
-    #     req_dim = tensor_dims[config['ablated_feat']]
-    #     config['node_feature_size']-=req_dim
-    
-    # if config['ablated_feat'] in config['relative_features_list']:
-    #     config['relative_features_list'].remove(config['ablated_feat'])
-        
-    #     req_dim = tensor_dims[config['ablated_feat']]
-    #     config['edge_feature_size']-=req_dim
-    
-    config['ablated_model_name'] = config['model_name'] + '_' + config['ablated_feat']    
+    config['ablated_model_name'] = config['model_name'] + '_' + str(config['num_frames'])
     
     n_folds = 5
     config['num_folds'] = n_folds

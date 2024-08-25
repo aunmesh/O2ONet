@@ -1,5 +1,11 @@
 import subprocess
 import time
+import argparse
+
+# Command line arguments
+parser = argparse.ArgumentParser(description='Run processes with different stratified values')
+parser.add_argument('--stratified', type=int, required=True, help='Stratified value to be used')
+args = parser.parse_args()
 
 # features_list = ['object_i3d_feature', 'bbox_CLIP', 'geometric_feature',
 #                 'object_semantic_embeddings', 'object_centric_shape_feats']
@@ -10,7 +16,6 @@ import time
 # arg_list = features_list + relative_features_list
 # gpus = [0,1,2,3,0,1,2,3]
 
-
 feature_group = ['CLIP', 'shape', 'bbox_geometric' ]
 
 arg_list = feature_group
@@ -18,9 +23,9 @@ arg_list = feature_group
 gpus = [0,1,2]
 
 
-base_command = "python executor/main_strat_custom_log.py --config --stratified 1 configs/gpnn_ablation.yaml --ablated_feat "
+base_command = f"python executor/main_strat_custom_log.py --config configs/gpnn_ablation.yaml --stratified {args.stratified} --ablated_feat "
 
-MAX_RETRIES = 10
+MAX_RETRIES = 15
 
 processes = {base_command + arg[0] + " --gpu " + str(arg[1]): {'process': None, 'retries': 0} for arg in zip(arg_list, gpus)}
 
@@ -30,17 +35,15 @@ print("Created processes dictionary")
 for cmd, data in processes.items():
     print(f"Launching: {cmd}")
     data['process'] = subprocess.Popen(cmd, shell=True)
-    time.sleep(5)  # Sleep for 10 seconds between launches
+    time.sleep(5)  # Sleep for 5 seconds between launches
 
 print("Launched all processes")
 counter = 0
 
-while processes:
-    
+while processes:    
     print("Checking processes " + str(counter))
-    counter+=1
-    
-    time.sleep(60)  # Sleep for 45 seconds between checks
+    counter+=1    
+    time.sleep(60)  # Sleep for 60 seconds between checks
 
     # Check the processes
     for cmd, data in list(processes.items()):  # Convert dict items to list to safely modify the dictionary while iterating
@@ -50,7 +53,7 @@ while processes:
                     print(f"Retrying: {cmd}")
                     data['retries'] += 1
                     data['process'] = subprocess.Popen(cmd, shell=True)
-                    time.sleep(2)  # Sleep for 10 seconds between launches                    
+                    time.sleep(2)  # Sleep for 2 seconds between retries                   
                 else:
                     print(f"Command {cmd} failed after maximum retries.")
                     del processes[cmd]                    
