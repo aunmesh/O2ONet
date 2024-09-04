@@ -68,8 +68,10 @@ def get_model(config):
 
 
 from dataloader.dataset import dataset as dataset_non_split
-from dataloader.dataset_non_strat import dataset as dataset_split
+# this dataset doesn't split using the split dict.
 
+from dataloader.dataset_non_strat import dataset as dataset_split
+# dataset_split is the dataset which splits according to the split dict and the split parameter.
 
 def get_dataset(config, split='train'):
 

@@ -21,12 +21,16 @@ from utils.utils import process_data_for_fpass
 
 import os
 
+
+
 def get_gif_files(folder_path):
     gif_files = []
     for file_name in os.listdir(folder_path):
         if file_name.endswith('.gif'):
             gif_files.append(file_name)
     return gif_files
+
+
 
 def get_indices_map(temp_dataset, gif_names):
 
@@ -114,9 +118,6 @@ def format_output(predictions, target):
     # So finally it is a list of lists of dictionary [[{}, {}]]
             
             
-    
-    
-    
     
     return loss
 

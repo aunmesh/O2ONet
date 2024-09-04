@@ -43,7 +43,7 @@ model_name: 'GPNN'
 GNN: 'GPNN'
 overfit: False
 
-model_saving_path: '/workspace/work/ral_gpnn/'
+model_saving_path: '/workspace/work/ral_gpnn_new/'
 
 # Neural Network dimensions
 cr_dimensions : [768, 3]
@@ -62,7 +62,7 @@ split_dict_location: '/workspace/work/server_data_backup/o2o_/split_dict.pkl'
 
 # relative location of the annotations file
 
-device: 'cuda:0'
+device: 'cuda:3'
 
 gif_size: 11
 
@@ -70,7 +70,7 @@ loss_calculation: 'masked'
 comments: 'None'
 
 # wandb_configs
-wandb_project_name: 'chi_2025_preparation'
+wandb_project_name: 'iui_2025_preparation'
 wandb_entity: 'aunmesh'
 
 log_results: True

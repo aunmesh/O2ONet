@@ -139,13 +139,11 @@ def get_parser():
                         help='bool for training'
                         )
 
-    parser.add_argument('--inference_folder_location',
+    parser.add_argument('--inf_file_loc',
                         type=str, 
-                        default="/workspace/work/misc/O2ONet/sota_experiments/gnn_revise_resubmit_v3/inference_folder", 
-                        help='folder where the gifs are stored for inference'
+                        default="/workspace/work/ral_revise_and_resubmit/ral_revise_resubmit/revised_feat_extraction/sample_inference_feature.pkl", 
+                        help='File where the features for inference are stored'
                         )
-
-
     
     parser.add_argument('--stratified',
                         type=int, 
@@ -269,6 +267,58 @@ def process_data_for_fpass(data_item, config):
     data_item['mr'] = data_item['mr'].to(config['device'])
     data_item['cr'] = data_item['cr'].to(config['device'])
 
+    # Padded features
+    obj_features = []
+    
+    for f in config['features_list']:
+        
+        if f in config['custom_filter_dict'].keys():
+            
+            # increased by 1 to take care of the batching dimension
+            frame_dim = config['custom_filter_dict'][f]['frame_dim'] + 1
+            
+            frame_index = config['custom_filter_dict'][f]['frame_index']
+            frame_index = torch.tensor([frame_index])
+            
+            temp_feat = data_item[f].index_select( 
+                                                    dim = frame_dim,
+                                                    index = frame_index
+                                                ).squeeze().to(config['device'])
+            
+            obj_features.append(temp_feat)
+        
+        else:
+            temp_feat = data_item[f].to(config['device'])
+            obj_features.append(temp_feat)
+    
+    obj_features = torch.cat(obj_features, 2)
+
+    data_item['concatenated_node_features'] = obj_features.to(config['device'])
+
+    interaction_centric_features = []
+    
+    for f in config['relative_features_list']:
+        temp_feat = data_item[f].flatten(3).to(config['device'])
+        interaction_centric_features.append(temp_feat)
+
+    data_item['interaction_feature'] = torch.cat(interaction_centric_features, 3)
+    
+    data_item = convert_tensor_values_to_float(data_item)
+
+    return data_item
+
+
+
+
+
+
+def process_data_for_fpass_inference(data_item, config):
+      
+    data_item['num_relation'] = torch.tensor(data_item['num_relation']).to(config['device'])
+    data_item['num_obj'] = torch.tensor(data_item['num_obj']).to(config['device'])
+
+    data_item['object_pairs'] = data_item['object_pairs'].type(torch.long)
+    
     # Padded features
     obj_features = []
     
